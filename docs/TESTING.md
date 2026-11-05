@@ -16,6 +16,14 @@
 | 当事者画面のポーリング同期            | 双方で完了状態の反映を確認                     |
 | 管理画面のr3閉塞                      | マップの候補が400mから475mへ変化することを確認 |
 
+Windows対応のCIも確認しました（[実行結果](https://github.com/KTaisei/devfest26/actions/runs/42065737825)、コード `35b36ce`）。Ubuntu・Windowsそれぞれで、以下の全6ジョブが成功しています。
+
+- Web：依存導入、TypeScript/Viteビルド、Prettier、API生成型の差分確認
+- Python：共通セットアップコマンドによる仮想環境作成、Ruff、15件のテスト、OpenAPI生成差分確認
+- Firebase：Java 21と公式エミュレータによるルール4件・結合3件のテスト
+
+Windowsのブラウザ操作・開発サーバーの手動起動と停止は実機未検証です。
+
 pytestは以下を検証します。
 
 - 災害種別に合わない避難先の除外、車いすの階段回避、GeoJSONの座標順
