@@ -77,6 +77,6 @@ GitHub ActionsでUbuntuとWindowsの両方に対し、Webビルド・Pythonテ�
 
 変更前に `git status`、`git fetch origin`、差分確認、`git pull --ff-only` の順で更新します。詳しくは [CONTRIBUTING.md](../CONTRIBUTING.md) を参照してください。改行は `.gitattributes` でLFに統一します。`.env`、`.venv`、匿名利用者データは各自の端末で管理し、共有しません。
 
-チームのFirebaseは `tasuku-77c63` です。実接続の設定は [SETUP.md](SETUP.md) を参照してください。ローカルエミュレータは別の `demo-tasuku` を使います。
+チームのFirebaseは `tasuku-77c63` です。実接続の設定は [SETUP.md](SETUP.md) を参照してください。Web設定を自分の `.env.cloud` に入力し、自分のGoogleアカウントでADCを設定したら、`npm run verify:cloud -- --project tasuku-77c63` で接続・保存・復元を確認できます。ローカルエミュレータは別の `demo-tasuku` を使います。
 
 参考：[Python venv公式資料](https://docs.python.org/3.14/library/venv.html)。共通コマンドがWindowsの `Scripts/python.exe` とMacの `bin/python` を選びます。

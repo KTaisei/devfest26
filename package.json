@@ -22,7 +22,8 @@
     "format:backend": "node scripts/backend.mjs format",
     "api:export": "node scripts/backend.mjs export",
     "dev:api:cloud": "node scripts/backend.mjs dev-cloud",
-    "dev:cloud": "npm run dev -w apps/mobile -- --mode cloud"
+    "dev:cloud": "npm run dev -w apps/mobile -- --mode cloud",
+    "verify:cloud": "node scripts/backend.mjs verify-cloud"
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^4.0.1",

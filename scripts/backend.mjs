@@ -61,6 +61,7 @@ const tasks = {
 };
 // Explicit cloud mode keeps the normal demo command usable before ADC is ready.
 tasks["dev-cloud"] = [...tasks.dev, "--env-file", ".env.cloud"];
+tasks["verify-cloud"] = ["scripts/verify_cloud.py", ...process.argv.slice(3)];
 const task = process.argv[2];
 if (task === "setup") {
   if (!existsSync(python)) {
@@ -99,7 +100,7 @@ if (task === "setup") {
 } else {
   if (!tasks[task])
     throw new Error(
-      "Expected setup, dev, dev-cloud, test, lint, format, check-format or export",
+      "Expected setup, dev, dev-cloud, test, lint, format, check-format, verify-cloud or export",
     );
   if (!existsSync(python)) throw new Error("Run npm run setup:backend first.");
   run(python, tasks[task], task.startsWith("dev") ? { cwd: "backend" } : {});

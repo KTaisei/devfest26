@@ -39,7 +39,9 @@ pytestは以下を検証します。
 
 実プロジェクト `tasuku-77c63` のWeb設定で匿名ログイン成功を確認し、一時検証アカウントを削除しました。Web/APIのクラウド設定を分ける `.env.cloud` と、Mac・Windows共通のPythonセットアップ・実行コマンドも追加しました。
 
-クラウドのFirestore・IAM・APIによる実署名トークン検証、Google Maps API、Gemini実呼び出し、GPSのOS権限、PWAインストール、iOS/Androidビルド・実機確認、Cloud Runでの稼働は未検証です。CIにはFirebase結合テストのジョブも追加しています。
+`npm run verify:cloud -- --project tasuku-77c63` を、このMacのADCで実行して成功しました。実署名トークンのAPI検証、Firestoreトランザクションでのプロフィール保存、新しい保存アダプタでの復元、未認証・偽トークンの拒否、デモ認証無効化を確認しています。位置情報は保存せず、検証用プロフィールと匿名アカウントは削除済みです。クラウドでの同時承諾競合・Security Rulesの適用状態・TTL・ブラウザ操作は未検証です。
+
+Google Maps API、Gemini実呼び出し、GPSのOS権限、PWAインストール、iOS/Androidビルド・実機確認、Cloud Runでの稼働は未検証です。CIにはFirebase結合テストのジョブも追加しています。
 
 Firebase CLIを含む開発依存全体にはnpm auditで14件のmoderateが報告されています。アプリ本体は0件です。互換範囲でのaudit fixでは解消されず、CLIの破壊的なダウングレードは実施していません。開発依存の更新時に再確認します。
 
