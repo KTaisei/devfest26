@@ -29,7 +29,9 @@ pytestは以下を検証します。
 
 メモリテストに加え、公式Authentication/Firestoreエミュレータで匿名トークン・保存・ルール・同時承諾・一連の支援フローを検証しました。トランザクション開始直後のfalsy判定による通常書込への誤分岐を修正しています。
 
-クラウドのFirebaseプロジェクト・IAM・実署名トークン、Google Maps API、Gemini実呼び出し、GPSのOS権限、PWAインストール、iOS/Androidビルド・実機確認、Cloud Runでの稼働は未検証です。CIにはFirebase結合テストのジョブも追加しています。
+実プロジェクト `tasuku-77c63` のWeb設定で匿名ログイン成功を確認し、一時検証アカウントを削除しました。Web/APIのクラウド設定を分ける `.env.cloud` と、Mac・Windows共通のPythonセットアップ・実行コマンドも追加しました。
+
+クラウドのFirestore・IAM・APIによる実署名トークン検証、Google Maps API、Gemini実呼び出し、GPSのOS権限、PWAインストール、iOS/Androidビルド・実機確認、Cloud Runでの稼働は未検証です。CIにはFirebase結合テストのジョブも追加しています。
 
 Firebase CLIを含む開発依存全体にはnpm auditで14件のmoderateが報告されています。アプリ本体は0件です。互換範囲でのaudit fixでは解消されず、CLIの破壊的なダウングレードは実施していません。開発依存の更新時に再確認します。
 

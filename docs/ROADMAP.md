@@ -11,17 +11,17 @@
 | 5    | 支援フローの仕上げ     | 期限切れ・再探索、合流地点、初回案内                 | 未着手   |
 | 6    | 公開デモ・モバイル     | Web公開とスマートフォン表示、必要なOSの実機確認      | 未着手   |
 
-## 次に必要な作業：Firebaseプロジェクト作成
+## 次に必要な作業：チーム用Firebaseへ接続
 
-あなたのGoogleアカウントで [Firebase Console](https://console.firebase.google.com/) を開き、次を設定します。現在のローカル開発は、この作業がまだでも続けられます。
+プロジェクト作成・ID共有は完了しています。チームのIDは **`tasuku-77c63`** です。Mac・Windows共通の起動・テストコマンドを用意しました。
 
-1. 「プロジェクトを作成」で表示名をTASUKUにする。Google AnalyticsはこのMVPでは使用しないのでOFFで構いません。
-2. 作成後、プロジェクト設定で **プロジェクトID** を確認する。表示名とは別の識別子です。
-3. Authenticationのログイン方法で「匿名」を有効にする。
-4. FirestoreをStandard edition・プロダクションモードで作成する。データベースIDは `(default)` を使う。
-5. プロジェクト設定でWebアプリを追加し、Firebase設定のapiKey・authDomain・projectIdを手元に控える。
+1. Firebase ConsoleのAuthenticationで「匿名」を有効にする。
+2. FirestoreをStandard edition・プロダクションモードで作成する。データベースIDは `(default)` を使う。
+3. プロジェクト設定でWebアプリを追加し、firebaseConfigのapiKey・authDomainを確認する。
+4. [SETUP.md](SETUP.md) のクラウド設定例を使い、各開発者のADC・IAM権限を用意する。
+5. 実プロジェクトで匿名ログイン・プロフィール保存・再読込を確認する。
 
-最初に共有してもらうのは **プロジェクトIDだけ** です。秘密鍵・サービスアカウントJSON・アクセストークンはチャットやGitHubへ貼り付けないでください。Web設定とバックエンドの認証設定は、プロジェクトを作成してから順に接続します。課金の有効化やCloud Runへの公開はこの段階の手順に含めません。
+Web設定を受領し、実プロジェクトの匿名ログイン成功と一時検証アカウントの削除まで確認しました。このMacにはGoogle Cloud CLI・ADCがないため、Firestoreを含むAPIの実接続は未検証です。各端末の `.env.cloud` を設定し、ADCを用意してから保存・再読込を確認します。秘密鍵・サービスアカウントJSON・アクセストークンはチャットやGitHubへ貼り付けないでください。課金の有効化やCloud Runへの公開はこの段階の手順に含めません。
 
 公式手順：[Webプロジェクト設定](https://firebase.google.com/docs/web/setup)、[Firestore作成](https://firebase.google.com/docs/firestore/quickstart)。
 

@@ -1,4 +1,4 @@
-"""Run at repository root using backend/.venv/bin/python scripts/export_openapi.py."""
+"""Run at repository root using npm run api:export."""
 
 import json
 import sys
@@ -9,5 +9,5 @@ sys.path.insert(0, str(root / "backend"))
 from app.main import app  # noqa: E402
 
 (root / "docs/openapi.json").write_text(
-    json.dumps(app.openapi(), ensure_ascii=False, indent=2) + "\n"
+    json.dumps(app.openapi(), ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
 )

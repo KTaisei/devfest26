@@ -14,7 +14,15 @@
     "firebase:start": "node scripts/firebase.mjs start",
     "test:firebase": "node scripts/firebase.mjs test",
     "test:rules": "node --test tests/firestore.rules.test.mjs",
-    "dev:firebase": "node scripts/firebase.mjs dev"
+    "dev:firebase": "node scripts/firebase.mjs dev",
+    "setup:backend": "node scripts/backend.mjs setup",
+    "dev:api": "node scripts/backend.mjs dev",
+    "test:backend": "node scripts/backend.mjs test",
+    "lint:backend": "node scripts/backend.mjs lint",
+    "format:backend": "node scripts/backend.mjs format",
+    "api:export": "node scripts/backend.mjs export",
+    "dev:api:cloud": "node scripts/backend.mjs dev-cloud",
+    "dev:cloud": "npm run dev -w apps/mobile -- --mode cloud"
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^4.0.1",

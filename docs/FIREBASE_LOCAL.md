@@ -43,7 +43,7 @@ npm run test:firebase
 - APIの保存アダプタを作り直してもFirestore内のプロフィールが残ること
 - Firestore上で同時承諾が1件だけ成功し、支援完了まで状態が保存されること
 
-GitHub ActionsでもJava 21を使って同じテストを実行します。Firestoreエミュレータはクラウド環境の全機能・制限を再現するものではないので、クラウドの結合確認は別途必要です。
+GitHub ActionsでもUbuntu・WindowsとJava 21を使って同じテストを実行します。Firestoreエミュレータはクラウド環境の全機能・制限を再現するものではないので、クラウドの結合確認は別途必要です。
 
 ## 設定を個別に使う場合
 
@@ -51,7 +51,7 @@ GitHub ActionsでもJava 21を使って同じテストを実行します。Fires
 
 バックエンドは `FIREBASE_EMULATOR_MODE=true`、`demo-` で始まるプロジェクトID、ループバック接続先2つを検証してから匿名資格情報を使います。Cloud Runでエミュレータモードを起動しようとすると拒否します。フロントのエミュレータ接続も開発ビルド・ローカルホスト・demoプロジェクトに限定します。
 
-`.firebaserc` の既定プロジェクトは架空の `demo-tasuku` です。クラウド用の作業では必ず実際の `--project <project-id>` を明示し、エミュレータ環境変数を外してください。
+`.firebaserc` の既定プロジェクトは架空の `demo-tasuku` です。チーム用 `team` エイリアスは `tasuku-77c63` です。クラウド用の作業では必ず実際の `--project <project-id>` を明示し、エミュレータ環境変数を外してください。
 
 ## 参照
 

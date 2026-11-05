@@ -1,1 +1,6 @@
-{"projects":{"default":"demo-tasuku"}}
+{
+  "projects": {
+    "default": "demo-tasuku",
+    "team": "tasuku-77c63"
+  }
+}

@@ -13,7 +13,7 @@ from ..models.schemas import Constraints, Location, RouteInput
 DATA_DIR = Path(
     os.environ.get("TASUKU_DATA_DIR", str(Path(__file__).resolve().parents[3] / "data"))
 )
-DATA = json.loads((DATA_DIR / "simulation/demo_001.json").read_text())
+DATA = json.loads((DATA_DIR / "simulation/demo_001.json").read_text(encoding="utf-8"))
 NODES = {node["id"]: node for node in DATA["nodes"]}
 
 

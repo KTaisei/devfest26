@@ -8,7 +8,7 @@ Ionic + React + TypeScript / Capacitor と Python + FastAPI を分離したモ�
 
 ## 最初の起動
 
-Node.js 22以上、Python 3.14を使用します。リポジトリのルートで実行してください。依存関係は `package-lock.json` と `backend/requirements.lock.txt` で固定しています。
+Node.js 22、Python 3.14を使用します。Mac・Windows共通のコマンドです。Windowsの導入方法とPowerShellの注意点は [Windows開発手順](docs/WINDOWS.md) を参照してください。リポジトリのルートで実行してください。依存関係は `package-lock.json` と `backend/requirements.lock.txt` で固定しています。
 
 ```sh
 # 開発前に必ずチームの更新を取得。未コミット変更があるときは先に確認・保存する。
@@ -17,18 +17,14 @@ git fetch origin
 git pull --ff-only
 
 npm ci
-python3 -m venv backend/.venv
-backend/.venv/bin/pip install -r backend/requirements.lock.txt
-cp backend/.env.example backend/.env
-cp apps/mobile/.env.example apps/mobile/.env
+npm run setup:backend
 ```
 
 ターミナルを2つ開きます。
 
 ```sh
-# ターミナル1：backend/.env を読み込むため backend から起動
-cd backend
-.venv/bin/uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+# ターミナル1：リポジトリのルートから
+npm run dev:api
 ```
 
 ```sh
@@ -53,7 +49,7 @@ npm run dev
 
 ## Firebaseを使ったローカル開発
 
-プロジェクト未作成でも、公式エミュレータで匿名認証・Firestore保存を使用できます。Node/Pythonの依存導入とJava 21以上が必要です。
+チーム用プロジェクトは `tasuku-77c63` です。クラウドの設定前でも、公式エミュレータで匿名認証・Firestore保存を使用できます。Node/Pythonの依存導入とJava 21以上が必要です。
 
 ```sh
 npm run dev:firebase   # エミュレータ・API・アプリを一括起動（アプリは5174番）
@@ -87,11 +83,11 @@ npm run test:firebase  # 開発環境を停止してから実行：ルール4件
 # ルートから
 npm run typecheck
 npm run build
-backend/.venv/bin/python -m pytest -c backend/pytest.ini backend/tests -q
+npm run test:backend
 npm run format
 
 # APIモデル変更時：生成ファイルを手編集しない
-backend/.venv/bin/python scripts/export_openapi.py
+npm run api:export
 npm run api:types
 ```
 

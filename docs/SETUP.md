@@ -6,14 +6,37 @@
 
 ## Firebase Authentication / Firestore
 
-クラウドへ接続するときはFIREBASE_EMULATOR_MODEをfalseにし、FIREBASE_AUTH_EMULATOR_HOST、FIRESTORE_EMULATOR_HOST、VITE_FIREBASE_AUTH_EMULATOR_URLを未設定にします。`.firebaserc`はローカル専用なので、Firebase CLIには必ず実プロジェクトの `--project <project-id>` を渡します。
+クラウドへ接続するときはFIREBASE_EMULATOR_MODEをfalseにし、FIREBASE_AUTH_EMULATOR_HOST、FIRESTORE_EMULATOR_HOST、VITE_FIREBASE_AUTH_EMULATOR_URLを未設定にします。チームのプロジェクトIDは **`tasuku-77c63`** です。`.firebaserc` に `team` エイリアスを登録しています。既定はローカル用の `demo-tasuku` なので、クラウド操作では `--project tasuku-77c63` を明示します。
 
 1. FirebaseでWebアプリを登録し、AuthenticationのAnonymousプロバイダを有効にする。
 2. Firestoreを作成し、`firestore.rules` と `firestore.indexes.json` をデプロイする。期限切れ削除用にprivate_locationsのexpiresAt TTLを有効にする。
-3. `apps/mobile/.env` にAPI key、auth domain、project IDを設定する。
-4. `backend/.env` に `DEMO_MODE=false`、`STORAGE_BACKEND=firestore`、`FIREBASE_PROJECT_ID=<project>` を設定する。
+3. `apps/mobile/.env.cloud.example` を `apps/mobile/.env.cloud` にコピーし、Firebase ConsoleのWeb設定からAPI keyとauth domainを設定する。auth domainの例はConsoleの値と照合する。
+4. `backend/.env.cloud.example` を `backend/.env.cloud` にコピーする。チームのproject ID・Firestore・実認証の設定が入っている。
 5. ローカルはApplication Default Credentials、Cloud Runでは実行サービスアカウントを使う。サービスアカウントJSONをリポジトリに置かない。
 6. 管理者だけFirebaseカスタムクレーム `admin: true` を設定する。クライアントから設定できる仕組みを作らない。
+
+設定ファイルのコピーは、すでにある `.env.cloud` の内容を確認してから行います。PowerShellの例：
+
+```powershell
+Copy-Item backend/.env.cloud.example backend/.env.cloud
+Copy-Item apps/mobile/.env.cloud.example apps/mobile/.env.cloud
+```
+
+Macでは同じパスで `cp` を使います。どちらもコピー後にWeb用のapiKeyを記入してください。プロジェクトIDだけではWeb認証を開始できません。Firebase ConsoleでWebアプリを登録すると設定を取得できます（[公式手順](https://firebase.google.com/docs/web/setup)）。
+
+バックエンドにはGoogle Cloud CLIで各開発者自身のADCを用意します。チーム管理者がプロジェクトへの必要なIAM権限を付与したうえで実行します。
+
+```sh
+gcloud auth application-default login
+gcloud auth application-default set-quota-project tasuku-77c63
+npm run dev:api:cloud
+# 別ターミナルから
+npm run dev:cloud
+```
+
+`.env.cloud` はGit管理外です。通常の `npm run dev:api` と `npm run dev` は既存の `.env` を使い、クラウド用コマンドだけが `.env.cloud` を読みます。同じポートを使うため、ローカルデモを停止してから起動します。
+
+Firebase CLIへのログインとADCは別です。秘密鍵ファイルをチームで配布する必要はありません。Web設定・匿名ログイン有効化・Firestore作成・ADCが揃うまでは `npm run dev:firebase` で開発を進めます。この変更ではクラウドへのデプロイやデータ書き込みは実施していません。
 
 バックエンドがFirestoreへ書き込みます。クライアント側の直接書き込みはルールで拒否します。本人プロフィールと当事者の依頼・マッチ以外は読み取れません。位置は本人も含めて直接読み取り不可です。Admin SDKはルールを迂回するので、サービスアカウントのIAMとAPIの検証が保護境界です。
 

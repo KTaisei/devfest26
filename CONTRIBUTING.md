@@ -14,6 +14,8 @@ git switch -c feat/short-description
 
 ブランチ名は `feat/`、`fix/`、`docs/` を目安にします。共有ブランチへのforce pushは行いません。作業中の変更があれば、自分のブランチでコミットするか内容を確認して退避してから取り込みます。競合時は担当者と意図を確認し、単純に片側を採用しないでください。
 
+Mac・Windowsで共通のnpmコマンドを使います。初回準備は [README.md](README.md)、PowerShellの補足は [docs/WINDOWS.md](docs/WINDOWS.md) を参照してください。
+
 ## 分担の境界
 
 - **フロント**：pages/components/theme。業務判断はAPIに任せ、通信をfeatures/servicesに置く。
@@ -31,9 +33,9 @@ TypeScriptはstrict、整形はPrettier。Pythonは型付き入力をPydanticで
 
 ```sh
 npm run format
-backend/.venv/bin/ruff format backend/app backend/tests scripts
+npm run format:backend
 npm run build
-backend/.venv/bin/python -m pytest -c backend/pytest.ini backend/tests -q
+npm run test:backend
 ```
 
 ## PRとプッシュ
