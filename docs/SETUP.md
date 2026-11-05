@@ -2,7 +2,11 @@
 
 この文書はチーム用の設定手順です。サービスの作成・課金設定・デプロイは今回実施していません。模擬専用Firebaseプロジェクトを用意してください。
 
+先に [Firebaseローカル開発](FIREBASE_LOCAL.md) で動作確認できます。クラウドプロジェクト作成からの順序は [ROADMAP.md](ROADMAP.md) を参照してください。
+
 ## Firebase Authentication / Firestore
+
+クラウドへ接続するときはFIREBASE_EMULATOR_MODEをfalseにし、FIREBASE_AUTH_EMULATOR_HOST、FIRESTORE_EMULATOR_HOST、VITE_FIREBASE_AUTH_EMULATOR_URLを未設定にします。`.firebaserc`はローカル専用なので、Firebase CLIには必ず実プロジェクトの `--project <project-id>` を渡します。
 
 1. FirebaseでWebアプリを登録し、AuthenticationのAnonymousプロバイダを有効にする。
 2. Firestoreを作成し、`firestore.rules` と `firestore.indexes.json` をデプロイする。期限切れ削除用にprivate_locationsのexpiresAt TTLを有効にする。

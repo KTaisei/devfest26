@@ -6,17 +6,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from .api.routes import router
 from .core.config import settings
 from .core.store import initialize_store
+from .core.firebase import initialize_firebase
 from .services.retention import purge_expired_locations
 
 
 @asynccontextmanager
 async def lifespan(app):
-    config = settings()
-    if config.firebase_project_id:
-        import firebase_admin
-
-        if not firebase_admin._apps:
-            firebase_admin.initialize_app(options={"projectId": config.firebase_project_id})
+    initialize_firebase()
     initialize_store()
 
     async def cleanup():

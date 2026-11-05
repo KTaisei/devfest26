@@ -52,14 +52,16 @@ class FirestoreView:
 
     def put(self, collection, key, value):
         ref = self.db.collection(collection).document(key)
-        if self.transaction:
+        # Empty Firestore transactions are falsy until the first queued write.
+        # Testing truthiness would bypass the transaction and can deadlock on its own read lock.
+        if self.transaction is not None:
             self.transaction.set(ref, value)
         else:
             ref.set(value)
 
     def delete(self, collection, key):
         ref = self.db.collection(collection).document(key)
-        if self.transaction:
+        if self.transaction is not None:
             self.transaction.delete(ref)
         else:
             ref.delete()

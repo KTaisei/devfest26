@@ -24,6 +24,10 @@ pytestは以下を検証します。
 - 自分の依頼がある利用者を支援候補から除外すること
 - 翻訳フォールバックの明示
 
-テスト対象の保存先はMemoryStoreです。Firestoreの分散トランザクション、Firestoreルールのエミュレータ検証、Firebase匿名認証・実トークン、Google Maps API、Gemini実呼び出し、GPSのOS権限、PWAインストール、iOS/Androidビルド・実機確認、Cloud Runでの稼働は未検証です。CI結果はGitHub側で別途確認します。
+メモリテストに加え、公式Authentication/Firestoreエミュレータで匿名トークン・保存・ルール・同時承諾・一連の支援フローを検証しました。トランザクション開始直後のfalsy判定による通常書込への誤分岐を修正しています。
+
+クラウドのFirebaseプロジェクト・IAM・実署名トークン、Google Maps API、Gemini実呼び出し、GPSのOS権限、PWAインストール、iOS/Androidビルド・実機確認、Cloud Runでの稼働は未検証です。CIにはFirebase結合テストのジョブも追加しています。
+
+Firebase CLIを含む開発依存全体にはnpm auditで14件のmoderateが報告されています。アプリ本体は0件です。互換範囲でのaudit fixでは解消されず、CLIの破壊的なダウングレードは実施していません。開発依存の更新時に再確認します。
 
 本番ビルドではIonicのチャンクサイズに関する警告があります。動作エラーではありませんが、将来の初期ロード改善対象です。pytestではStarletteのhttpxテストクライアントについて非推奨警告が1件出ます。テストは成功しています。
