@@ -1,0 +1,9 @@
+{
+  "firestore": {"rules":"firestore.rules","indexes":"firestore.indexes.json"},
+  "hosting": {
+    "public":"apps/mobile/dist",
+    "ignore":["firebase.json","**/.*","**/node_modules/**"],
+    "rewrites":[{"source":"/api/**","run":{"serviceId":"tasuku-api","region":"asia-northeast1"}},{"source":"**","destination":"/index.html"}],
+    "headers":[{"source":"**","headers":[{"key":"X-Content-Type-Options","value":"nosniff"},{"key":"Referrer-Policy","value":"strict-origin-when-cross-origin"},{"key":"Permissions-Policy","value":"geolocation=(self)"}]}]
+  }
+}

@@ -1,0 +1,1454 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "TASUKU Simulation API",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/v1/health": {
+      "get": {
+        "summary": "Health",
+        "operationId": "health_api_v1_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/demo": {
+      "post": {
+        "summary": "Demo Session",
+        "operationId": "demo_session_api_v1_auth_demo_post",
+        "parameters": [
+          {
+            "name": "admin",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Admin"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/profile": {
+      "get": {
+        "summary": "Get Profile",
+        "operationId": "get_profile_api_v1_profile_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/ProfileOutput"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Get Profile Api V1 Profile Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "put": {
+        "summary": "Save Profile",
+        "operationId": "save_profile_api_v1_profile_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Profile"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileOutput"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/location": {
+      "put": {
+        "summary": "Save Location",
+        "operationId": "save_location_api_v1_location_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Location"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/disasters": {
+      "get": {
+        "summary": "Disasters",
+        "operationId": "disasters_api_v1_disasters_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/shelters": {
+      "get": {
+        "summary": "Shelters",
+        "operationId": "shelters_api_v1_shelters_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/simulation/scenarios": {
+      "get": {
+        "summary": "Scenarios",
+        "operationId": "scenarios_api_v1_simulation_scenarios_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/simulation/roads/{road_id}": {
+      "patch": {
+        "summary": "Update Road",
+        "operationId": "update_road_api_v1_simulation_roads__road_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "road_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Road Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoadInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/routes/calculate": {
+      "post": {
+        "summary": "Route",
+        "operationId": "route_api_v1_routes_calculate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RouteInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RouteOutput"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/support-requests": {
+      "post": {
+        "summary": "Request Support",
+        "operationId": "request_support_api_v1_support_requests_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestOutput"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/support-requests/me": {
+      "get": {
+        "summary": "My Requests",
+        "operationId": "my_requests_api_v1_support_requests_me_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/RequestOutput"
+                  },
+                  "type": "array",
+                  "title": "Response My Requests Api V1 Support Requests Me Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/support-requests/{request_id}/cancel": {
+      "post": {
+        "summary": "Cancel Request",
+        "operationId": "cancel_request_api_v1_support_requests__request_id__cancel_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Request Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/matches/recommend": {
+      "post": {
+        "summary": "Recommendations",
+        "operationId": "recommendations_api_v1_matches_recommend_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecommendInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MatchOutput"
+                  },
+                  "type": "array",
+                  "title": "Response Recommendations Api V1 Matches Recommend Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/matches/me": {
+      "get": {
+        "summary": "My Matches",
+        "operationId": "my_matches_api_v1_matches_me_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MatchOutput"
+                  },
+                  "type": "array",
+                  "title": "Response My Matches Api V1 Matches Me Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/matches/{match_id}/accept": {
+      "post": {
+        "summary": "Accept Match",
+        "operationId": "accept_match_api_v1_matches__match_id__accept_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "match_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Match Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/matches/{match_id}/reject": {
+      "post": {
+        "summary": "Reject Match",
+        "operationId": "reject_match_api_v1_matches__match_id__reject_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "match_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Match Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/matches/{match_id}/cancel": {
+      "post": {
+        "summary": "Cancel Match",
+        "operationId": "cancel_match_api_v1_matches__match_id__cancel_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "match_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Match Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/matches/{match_id}/progress": {
+      "post": {
+        "summary": "Progress Match",
+        "operationId": "progress_match_api_v1_matches__match_id__progress_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "match_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Match Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProgressInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/matches/{match_id}/complete": {
+      "post": {
+        "summary": "Complete Match",
+        "operationId": "complete_match_api_v1_matches__match_id__complete_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "match_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Match Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/translations/generate": {
+      "post": {
+        "summary": "Translation",
+        "operationId": "translation_api_v1_translations_generate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TranslationInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Constraints": {
+        "properties": {
+          "avoidStairs": {
+            "type": "boolean",
+            "title": "Avoidstairs",
+            "default": false
+          },
+          "wheelchair": {
+            "type": "boolean",
+            "title": "Wheelchair",
+            "default": false
+          },
+          "walkingSpeedMetersPerSecond": {
+            "type": "number",
+            "maximum": 2.0,
+            "minimum": 0.2,
+            "title": "Walkingspeedmeterspersecond",
+            "default": 1.0
+          }
+        },
+        "type": "object",
+        "title": "Constraints"
+      },
+      "EvacuationRoute": {
+        "properties": {
+          "routeId": {
+            "type": "string",
+            "title": "Routeid"
+          },
+          "shelterId": {
+            "type": "string",
+            "title": "Shelterid"
+          },
+          "distanceMeters": {
+            "type": "number",
+            "title": "Distancemeters"
+          },
+          "estimatedSeconds": {
+            "type": "integer",
+            "title": "Estimatedseconds"
+          },
+          "geometry": {
+            "$ref": "#/components/schemas/Geometry"
+          },
+          "edgeIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Edgeids"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          },
+          "checkedAt": {
+            "type": "string",
+            "title": "Checkedat"
+          },
+          "dataStatus": {
+            "type": "string",
+            "const": "simulation",
+            "title": "Datastatus",
+            "default": "simulation"
+          }
+        },
+        "type": "object",
+        "required": [
+          "routeId",
+          "shelterId",
+          "distanceMeters",
+          "estimatedSeconds",
+          "geometry",
+          "edgeIds",
+          "warnings",
+          "checkedAt"
+        ],
+        "title": "EvacuationRoute"
+      },
+      "Geometry": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "LineString",
+            "title": "Type",
+            "default": "LineString"
+          },
+          "coordinates": {
+            "items": {
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array",
+              "maxItems": 2,
+              "minItems": 2
+            },
+            "type": "array",
+            "title": "Coordinates"
+          }
+        },
+        "type": "object",
+        "required": [
+          "coordinates"
+        ],
+        "title": "Geometry"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "Location": {
+        "properties": {
+          "latitude": {
+            "type": "number",
+            "maximum": 90.0,
+            "minimum": -90.0,
+            "title": "Latitude"
+          },
+          "longitude": {
+            "type": "number",
+            "maximum": 180.0,
+            "minimum": -180.0,
+            "title": "Longitude"
+          }
+        },
+        "type": "object",
+        "required": [
+          "latitude",
+          "longitude"
+        ],
+        "title": "Location"
+      },
+      "MatchOutput": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "requestId": {
+            "type": "string",
+            "title": "Requestid"
+          },
+          "requesterId": {
+            "type": "string",
+            "title": "Requesterid"
+          },
+          "helperId": {
+            "type": "string",
+            "title": "Helperid"
+          },
+          "helperName": {
+            "type": "string",
+            "title": "Helpername"
+          },
+          "requesterName": {
+            "type": "string",
+            "title": "Requestername"
+          },
+          "supportType": {
+            "type": "string",
+            "enum": [
+              "navigation",
+              "translation",
+              "information",
+              "walking_companion"
+            ],
+            "title": "Supporttype"
+          },
+          "estimatedSeconds": {
+            "type": "integer",
+            "title": "Estimatedseconds"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "waiting",
+              "offered",
+              "accepted",
+              "meeting",
+              "assisting",
+              "completed",
+              "rejected",
+              "cancelled",
+              "expired"
+            ],
+            "title": "Status"
+          },
+          "createdAt": {
+            "type": "string",
+            "title": "Createdat"
+          },
+          "updatedAt": {
+            "type": "string",
+            "title": "Updatedat"
+          },
+          "dataStatus": {
+            "type": "string",
+            "const": "simulation",
+            "title": "Datastatus",
+            "default": "simulation"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "requestId",
+          "requesterId",
+          "helperId",
+          "helperName",
+          "requesterName",
+          "supportType",
+          "estimatedSeconds",
+          "status",
+          "createdAt",
+          "updatedAt"
+        ],
+        "title": "MatchOutput"
+      },
+      "Profile": {
+        "properties": {
+          "displayName": {
+            "type": "string",
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Displayname",
+            "default": "ゲスト"
+          },
+          "preferredLanguage": {
+            "type": "string",
+            "enum": [
+              "ja",
+              "en"
+            ],
+            "title": "Preferredlanguage",
+            "default": "ja"
+          },
+          "mobilityType": {
+            "type": "string",
+            "enum": [
+              "normal",
+              "slow_walk",
+              "wheelchair",
+              "assistance_required"
+            ],
+            "title": "Mobilitytype",
+            "default": "normal"
+          },
+          "avoidStairs": {
+            "type": "boolean",
+            "title": "Avoidstairs",
+            "default": false
+          },
+          "supportCapabilities": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "navigation",
+                "translation",
+                "information",
+                "walking_companion"
+              ]
+            },
+            "type": "array",
+            "maxItems": 4,
+            "title": "Supportcapabilities"
+          },
+          "isAvailableToHelp": {
+            "type": "boolean",
+            "title": "Isavailabletohelp",
+            "default": false
+          },
+          "locationSharingEnabled": {
+            "type": "boolean",
+            "title": "Locationsharingenabled",
+            "default": false
+          }
+        },
+        "type": "object",
+        "title": "Profile"
+      },
+      "ProfileOutput": {
+        "properties": {
+          "displayName": {
+            "type": "string",
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Displayname",
+            "default": "ゲスト"
+          },
+          "preferredLanguage": {
+            "type": "string",
+            "enum": [
+              "ja",
+              "en"
+            ],
+            "title": "Preferredlanguage",
+            "default": "ja"
+          },
+          "mobilityType": {
+            "type": "string",
+            "enum": [
+              "normal",
+              "slow_walk",
+              "wheelchair",
+              "assistance_required"
+            ],
+            "title": "Mobilitytype",
+            "default": "normal"
+          },
+          "avoidStairs": {
+            "type": "boolean",
+            "title": "Avoidstairs",
+            "default": false
+          },
+          "supportCapabilities": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "navigation",
+                "translation",
+                "information",
+                "walking_companion"
+              ]
+            },
+            "type": "array",
+            "maxItems": 4,
+            "title": "Supportcapabilities"
+          },
+          "isAvailableToHelp": {
+            "type": "boolean",
+            "title": "Isavailabletohelp",
+            "default": false
+          },
+          "locationSharingEnabled": {
+            "type": "boolean",
+            "title": "Locationsharingenabled",
+            "default": false
+          },
+          "uid": {
+            "type": "string",
+            "title": "Uid"
+          }
+        },
+        "type": "object",
+        "required": [
+          "uid"
+        ],
+        "title": "ProfileOutput"
+      },
+      "ProgressInput": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "meeting",
+              "assisting"
+            ],
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "ProgressInput"
+      },
+      "RecommendInput": {
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "title": "Requestid"
+          }
+        },
+        "type": "object",
+        "required": [
+          "requestId"
+        ],
+        "title": "RecommendInput"
+      },
+      "RequestInput": {
+        "properties": {
+          "supportType": {
+            "type": "string",
+            "enum": [
+              "navigation",
+              "translation",
+              "information",
+              "walking_companion"
+            ],
+            "title": "Supporttype"
+          },
+          "language": {
+            "type": "string",
+            "enum": [
+              "ja",
+              "en"
+            ],
+            "title": "Language",
+            "default": "ja"
+          },
+          "message": {
+            "type": "string",
+            "maxLength": 300,
+            "title": "Message",
+            "default": ""
+          },
+          "locationSharingConsent": {
+            "type": "boolean",
+            "title": "Locationsharingconsent"
+          },
+          "origin": {
+            "$ref": "#/components/schemas/Location"
+          },
+          "disasterType": {
+            "type": "string",
+            "enum": [
+              "earthquake",
+              "tsunami",
+              "flood"
+            ],
+            "title": "Disastertype",
+            "default": "earthquake"
+          },
+          "mobilityConstraints": {
+            "$ref": "#/components/schemas/Constraints"
+          }
+        },
+        "type": "object",
+        "required": [
+          "supportType",
+          "locationSharingConsent",
+          "origin"
+        ],
+        "title": "RequestInput"
+      },
+      "RequestOutput": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "uid": {
+            "type": "string",
+            "title": "Uid"
+          },
+          "supportType": {
+            "type": "string",
+            "enum": [
+              "navigation",
+              "translation",
+              "information",
+              "walking_companion"
+            ],
+            "title": "Supporttype"
+          },
+          "language": {
+            "type": "string",
+            "enum": [
+              "ja",
+              "en"
+            ],
+            "title": "Language"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "disasterType": {
+            "type": "string",
+            "enum": [
+              "earthquake",
+              "tsunami",
+              "flood"
+            ],
+            "title": "Disastertype"
+          },
+          "mobilityConstraints": {
+            "$ref": "#/components/schemas/Constraints"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "waiting",
+              "offered",
+              "accepted",
+              "meeting",
+              "assisting",
+              "completed",
+              "rejected",
+              "cancelled",
+              "expired"
+            ],
+            "title": "Status"
+          },
+          "createdAt": {
+            "type": "string",
+            "title": "Createdat"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "uid",
+          "supportType",
+          "language",
+          "message",
+          "disasterType",
+          "mobilityConstraints",
+          "status",
+          "createdAt"
+        ],
+        "title": "RequestOutput"
+      },
+      "RoadInput": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "open",
+              "restricted",
+              "closed",
+              "unknown"
+            ],
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "RoadInput"
+      },
+      "RouteInput": {
+        "properties": {
+          "origin": {
+            "$ref": "#/components/schemas/Location"
+          },
+          "disasterType": {
+            "type": "string",
+            "enum": [
+              "earthquake",
+              "tsunami",
+              "flood"
+            ],
+            "title": "Disastertype",
+            "default": "earthquake"
+          },
+          "mobilityConstraints": {
+            "$ref": "#/components/schemas/Constraints"
+          },
+          "scenarioId": {
+            "type": "string",
+            "title": "Scenarioid",
+            "default": "demo_001"
+          }
+        },
+        "type": "object",
+        "required": [
+          "origin"
+        ],
+        "title": "RouteInput"
+      },
+      "RouteOutput": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "candidate_found",
+              "no_route"
+            ],
+            "title": "Status"
+          },
+          "routes": {
+            "items": {
+              "$ref": "#/components/schemas/EvacuationRoute"
+            },
+            "type": "array",
+            "title": "Routes"
+          },
+          "snappedNodeId": {
+            "type": "string",
+            "title": "Snappednodeid"
+          },
+          "dataStatus": {
+            "type": "string",
+            "const": "simulation",
+            "title": "Datastatus",
+            "default": "simulation"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "routes",
+          "snappedNodeId"
+        ],
+        "title": "RouteOutput"
+      },
+      "TranslationInput": {
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "const": "event_001",
+            "title": "Eventid",
+            "default": "event_001"
+          },
+          "language": {
+            "type": "string",
+            "enum": [
+              "ja",
+              "en"
+            ],
+            "title": "Language"
+          }
+        },
+        "type": "object",
+        "required": [
+          "language"
+        ],
+        "title": "TranslationInput"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  }
+}

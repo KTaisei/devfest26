@@ -1,0 +1,1 @@
+{"name": "TASUKU 避難支援デモ", "short_name": "TASUKU", "theme_color": "#2563eb", "background_color": "#f8fafc", "display": "standalone", "start_url": "/", "icons": [{"src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any"}]}

@@ -1,0 +1,22 @@
+{
+  "name": "tasuku-workspace",
+  "private": true,
+  "workspaces": [
+    "apps/mobile"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w apps/mobile",
+    "build": "npm run build -w apps/mobile",
+    "typecheck": "npm run typecheck -w apps/mobile",
+    "api:types": "openapi-typescript docs/openapi.json -o apps/mobile/src/types/api.generated.ts && prettier --write apps/mobile/src/types/api.generated.ts",
+    "format": "prettier --write \"apps/mobile/src/**/*.{ts,tsx,css}\" \"apps/mobile/*.{ts,json,html}\" \"docs/*.md\" README.md",
+    "format:check": "prettier --check \"apps/mobile/src/**/*.{ts,tsx,css}\""
+  },
+  "devDependencies": {
+    "openapi-typescript": "^7.6.1",
+    "prettier": "^3.5.0"
+  },
+  "overrides": {
+    "@grpc/grpc-js": "^1.14.7"
+  }
+}

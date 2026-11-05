@@ -1,0 +1,206 @@
+{
+  "id": "demo_001",
+  "name": "福山駅周辺・架空道路網",
+  "description": "福山駅付近の座標を使った架空の避難場所・道路です。現地の経路案内には使用できません。",
+  "nodes": [
+    {
+      "id": "station",
+      "latitude": 34.4884,
+      "longitude": 133.3614
+    },
+    {
+      "id": "west",
+      "latitude": 34.4896,
+      "longitude": 133.3598
+    },
+    {
+      "id": "cross",
+      "latitude": 34.4896,
+      "longitude": 133.3614
+    },
+    {
+      "id": "east",
+      "latitude": 34.4896,
+      "longitude": 133.3632
+    },
+    {
+      "id": "park",
+      "latitude": 34.4912,
+      "longitude": 133.3598
+    },
+    {
+      "id": "north",
+      "latitude": 34.4912,
+      "longitude": 133.3614
+    },
+    {
+      "id": "school",
+      "latitude": 34.4912,
+      "longitude": 133.3632
+    },
+    {
+      "id": "hill",
+      "latitude": 34.4928,
+      "longitude": 133.3614
+    }
+  ],
+  "edges": [
+    {
+      "id": "r1",
+      "fromNode": "station",
+      "toNode": "cross",
+      "distance": 145,
+      "hasStairs": false,
+      "wheelchairAccessible": true,
+      "slope": 0.02,
+      "riskLevel": 0,
+      "roadStatus": "open",
+      "source": "TASUKU 模擬データ",
+      "updatedAt": "2026-11-05T00:00:00Z"
+    },
+    {
+      "id": "r2",
+      "fromNode": "cross",
+      "toNode": "north",
+      "distance": 180,
+      "hasStairs": true,
+      "wheelchairAccessible": false,
+      "slope": 0.02,
+      "riskLevel": 0,
+      "roadStatus": "open",
+      "source": "TASUKU 模擬データ",
+      "updatedAt": "2026-11-05T00:00:00Z"
+    },
+    {
+      "id": "r3",
+      "fromNode": "station",
+      "toNode": "west",
+      "distance": 220,
+      "hasStairs": false,
+      "wheelchairAccessible": true,
+      "slope": 0.02,
+      "riskLevel": 0,
+      "roadStatus": "open",
+      "source": "TASUKU 模擬データ",
+      "updatedAt": "2026-11-05T00:00:00Z"
+    },
+    {
+      "id": "r4",
+      "fromNode": "west",
+      "toNode": "park",
+      "distance": 180,
+      "hasStairs": false,
+      "wheelchairAccessible": true,
+      "slope": 0.02,
+      "riskLevel": 0,
+      "roadStatus": "open",
+      "source": "TASUKU 模擬データ",
+      "updatedAt": "2026-11-05T00:00:00Z"
+    },
+    {
+      "id": "r5",
+      "fromNode": "park",
+      "toNode": "north",
+      "distance": 150,
+      "hasStairs": false,
+      "wheelchairAccessible": true,
+      "slope": 0.02,
+      "riskLevel": 0,
+      "roadStatus": "open",
+      "source": "TASUKU 模擬データ",
+      "updatedAt": "2026-11-05T00:00:00Z"
+    },
+    {
+      "id": "r6",
+      "fromNode": "cross",
+      "toNode": "east",
+      "distance": 170,
+      "hasStairs": false,
+      "wheelchairAccessible": true,
+      "slope": 0.02,
+      "riskLevel": 0,
+      "roadStatus": "open",
+      "source": "TASUKU 模擬データ",
+      "updatedAt": "2026-11-05T00:00:00Z"
+    },
+    {
+      "id": "r7",
+      "fromNode": "east",
+      "toNode": "school",
+      "distance": 180,
+      "hasStairs": false,
+      "wheelchairAccessible": true,
+      "slope": 0.02,
+      "riskLevel": 0,
+      "roadStatus": "open",
+      "source": "TASUKU 模擬データ",
+      "updatedAt": "2026-11-05T00:00:00Z"
+    },
+    {
+      "id": "r8",
+      "fromNode": "school",
+      "toNode": "north",
+      "distance": 170,
+      "hasStairs": false,
+      "wheelchairAccessible": true,
+      "slope": 0.02,
+      "riskLevel": 0,
+      "roadStatus": "open",
+      "source": "TASUKU 模擬データ",
+      "updatedAt": "2026-11-05T00:00:00Z"
+    },
+    {
+      "id": "r9",
+      "fromNode": "north",
+      "toNode": "hill",
+      "distance": 190,
+      "hasStairs": false,
+      "wheelchairAccessible": true,
+      "slope": 0.02,
+      "riskLevel": 0,
+      "roadStatus": "open",
+      "source": "TASUKU 模擬データ",
+      "updatedAt": "2026-11-05T00:00:00Z"
+    }
+  ],
+  "shelters": [
+    {
+      "id": "shelter_park",
+      "nodeId": "park",
+      "name": "みどり広場（架空）",
+      "disasterTypes": [
+        "earthquake"
+      ],
+      "accessible": true,
+      "capacity": 120,
+      "openingStatus": "simulation",
+      "kind": "指定緊急避難場所（模擬）"
+    },
+    {
+      "id": "shelter_school",
+      "nodeId": "school",
+      "name": "ひかり交流館（架空）",
+      "disasterTypes": [
+        "earthquake",
+        "flood"
+      ],
+      "accessible": true,
+      "capacity": 200,
+      "openingStatus": "simulation",
+      "kind": "避難所（模擬）"
+    },
+    {
+      "id": "shelter_hill",
+      "nodeId": "hill",
+      "name": "高台避難スペース（架空）",
+      "disasterTypes": [
+        "earthquake",
+        "tsunami"
+      ],
+      "accessible": true,
+      "capacity": 80,
+      "openingStatus": "simulation",
+      "kind": "津波避難場所（模擬）"
+    }
+  ]
+}
