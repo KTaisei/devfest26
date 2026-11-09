@@ -165,6 +165,26 @@ def test_expired_offer_without_another_helper_returns_to_waiting(client):
     assert offer(client, a, r["id"]).json() == []
 
 
+def test_accept_shares_a_meeting_point_with_both_parties(client):
+    from app.services.route_optimizer import NODES
+
+    _, a = identity(client, "Requester")
+    _, b = identity(client, "Helper", helper=True)
+    m = offer(client, a, request(client, a)["id"]).json()[0]
+    assert m["meetingPoint"] is None
+    accepted = client.post(f"/api/v1/matches/{m['id']}/accept", headers=b).json()
+    point = accepted["meetingPoint"]
+    assert point is not None
+    node = NODES[point["nodeId"]]
+    assert (point["latitude"], point["longitude"]) == (node["latitude"], node["longitude"])
+    # Both demo users start at the station node, so nobody needs to travel.
+    assert point["nodeId"] == "station"
+    assert point["helperSeconds"] == 0 and point["requesterSeconds"] == 0
+    for headers in (a, b):
+        mine = client.get("/api/v1/matches/me", headers=headers).json()
+        assert mine[0]["meetingPoint"] == point
+
+
 def test_translation_fallback_is_explicit(client):
     _, a = identity(client)
     result = client.post("/api/v1/translations/generate", headers=a, json={"language": "en"}).json()
