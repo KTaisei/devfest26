@@ -39,19 +39,20 @@ def main():
         if value is not None:
             os.environ[key] = value
     os.environ.update(DEMO_MODE="false", STORAGE_BACKEND="firestore")
-    for key in emulator_keys:
-        os.environ.pop(key, None)
     # Settings also reads .env relative to cwd; use the same directory as dev:api.
     os.chdir(root / "backend")
     sys.path.insert(0, str(root / "backend"))
 
     from app.main import app
     from app.core import store as repository
+    from app.core.firebase import initialize_firebase
     from fastapi.testclient import TestClient
     from google.cloud import firestore
     import google.auth
 
     # Confirm ADC and database access before creating any verification resources.
+    # Exercise the same SDK environment normalization as the normal cloud server.
+    initialize_firebase()
     credentials, _ = google.auth.default(scopes=["https://www.googleapis.com/auth/cloud-platform"])
     db = firestore.Client(project=project, credentials=credentials)
     list(db.collection("users").limit(1).select([]).stream(timeout=20))

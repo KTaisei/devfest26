@@ -69,3 +69,30 @@ def test_firestore_full_flow_and_participant_visibility(client):
     assert client.post(f"/api/v1/matches/{match_id}/complete", headers=helper).status_code == 200
     for headers in [requester, helper]:
         assert client.get("/api/v1/matches/me", headers=headers).json()[0]["status"] == "completed"
+
+
+def test_firestore_expiry_and_retry_preserve_request_claim(client):
+    from datetime import datetime, timedelta, timezone
+    from app.core import store as repository
+
+    requester_uid, requester = identity(client)
+    _, helper = identity(client, helper=True)
+    r = request(client, requester)
+    first = offer(client, requester, r["id"])
+    first["createdAt"] = (datetime.now(timezone.utc) - timedelta(minutes=6)).isoformat()
+    repository.store.put("matches", first["id"], first)
+    assert client.get("/api/v1/matches/me", headers=helper).json()[0]["status"] == "expired"
+    assert client.post(f"/api/v1/matches/{first['id']}/accept", headers=helper).status_code == 409
+    assert (
+        client.get("/api/v1/support-requests/me", headers=requester).json()[0]["status"]
+        == "waiting"
+    )
+    assert repository.store.get("request_claims", requester_uid)["requestId"] == r["id"]
+    next_uid, _ = identity(client, helper=True)
+    retry = offer(client, requester, r["id"])
+    assert retry["helperId"] == next_uid
+    assert (
+        client.post(f"/api/v1/support-requests/{r['id']}/cancel", headers=requester).status_code
+        == 200
+    )
+    assert repository.store.get("request_claims", requester_uid) is None

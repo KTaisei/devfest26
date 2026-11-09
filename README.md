@@ -43,6 +43,7 @@ npm run dev
 - 支援要請の確認・送信・取消、支援者の対応能力と位置共有の登録
 - 到着時間、言語、通行可能性、支援後の避難と追加移動時間による候補評価
 - 双方の同意に基づく承諾、同じ支援者への同時確定防止、3秒ごとの状態同期
+- 5分で未承諾オファーを失効し、別候補を手動で再探索
 - Firebase匿名認証・IDトークン検証とFirestore保存の接続実装
 - Geminiによる模擬災害情報の日本語・英語案内と、未設定・失敗時の明示的な固定文フォールバック
 - OpenAPIと生成TypeScript型、Firestoreルール、GitHub Actions CI、Cloud Run用Dockerfile
@@ -53,7 +54,7 @@ npm run dev
 
 ```sh
 npm run dev:firebase   # エミュレータ・API・アプリを一括起動（アプリは5174番）
-npm run test:firebase  # 開発環境を停止してから実行：ルール4件＋結合3件
+npm run test:firebase  # 開発環境を停止してから実行：ルール4件＋結合4件
 ```
 
 クラウドキー不要です。詳しくは [Firebaseローカル開発](docs/FIREBASE_LOCAL.md)、次の作業順は [開発ロードマップ](docs/ROADMAP.md) を参照してください。
@@ -95,16 +96,16 @@ npm run api:types
 
 [docs/SETUP.md](docs/SETUP.md) にFirebase、Google Maps、Gemini、Cloud Run、Capacitorの設定をまとめています。秘密鍵・`.env` はコミットしません。FirebaseのWeb設定・Google Mapsのブラウザキーは公開される前提なので、API制限・リファラー制限を設定してください。
 
-Firebaseは実プロジェクトでのAPI認証・プロフィール保存・復元まで確認済みです。Google Maps・Geminiの実サービス接続、Cloud Runへのデプロイ、iOS/Android実機は未検証です。詳細は [検証記録](docs/TESTING.md) を参照してください。
+Firebaseは実プロジェクトでのAPI認証・プロフィール保存・復元と、ブラウザでの保存・再読み込みまで確認済みです。Google Maps・Geminiの実サービス接続、Cloud Runへのデプロイ、iOS/Android実機は未検証です。詳細は [検証記録](docs/TESTING.md) を参照してください。
 
 ## MVPの残作業
 
 この実装は仕様v2.0の土台と一連のデモフローです。すべての完成条件を検証済みという意味ではありません。
 
-- Firebaseのクラウド接続をブラウザで確認し、Google Maps/Geminiの設定と結合試験へ進む
+- Google Maps/Geminiの設定と結合試験へ進む（キーは各自のGit管理外 `.env.cloud` に設定）
 - Firebase実環境での同時承諾・ルール・TTL検証と共同開発者のIAM設定（基本の認証・保存は確認済み）
 - F-014の支援要請文からの支援内容抽出（現状は選択式）
-- オンボーディング専用画面、通知、合流地点の共有、複数候補への順次再依頼、オファーの自動失効表示
+- オンボーディング専用画面、通知、合流地点の共有、複数候補への自動再依頼
 - iOS/Androidプロジェクト追加・権限文言・実機確認
 - 公式災害情報・実道路グラフ・データの安全性検証
 - PWAマニフェストを用意しています。オフライン動作・地図キャッシュ・バックグラウンド処理は未実装です。インストール可否はブラウザで異なります。

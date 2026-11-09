@@ -18,7 +18,7 @@ from ..models.schemas import (
     MatchOutput,
 )
 from ..services.route_optimizer import DATA, NODES, calculate, roads, now
-from ..services.matching_engine import ACTIVE, create_request, recommend, transition
+from ..services.matching_engine import ACTIVE, create_request, recommend, transition, expire_offers
 from ..services.gemini_service import EVENT, translate
 
 router = APIRouter(prefix="/api/v1")
@@ -132,6 +132,7 @@ def request_support(payload: RequestInput, user: Actor = Depends(actor)):
 
 @router.get("/support-requests/me", response_model=list[RequestOutput])
 def my_requests(user: Actor = Depends(actor)):
+    expire_offers(user.uid)
     return [r for r in repository.store.scan("support_requests") if r["uid"] == user.uid]
 
 
@@ -168,6 +169,7 @@ def recommendations(payload: RecommendInput, user: Actor = Depends(actor)):
 
 @router.get("/matches/me", response_model=list[MatchOutput])
 def my_matches(user: Actor = Depends(actor)):
+    expire_offers(user.uid)
     return [
         m for m in repository.store.scan("matches") if user.uid in {m["requesterId"], m["helperId"]}
     ]

@@ -124,4 +124,5 @@ class MatchOutput(BaseModel):
     status: Status
     createdAt: str
     updatedAt: str
+    expiresAt: str | None = None
     dataStatus: Literal["simulation"] = "simulation"

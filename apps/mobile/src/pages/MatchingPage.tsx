@@ -55,6 +55,23 @@ export function MatchCards({ helper = false }: { helper?: boolean }) {
               ? "Anonymous participant · identity not verified"
               : "匿名ユーザー・本人確認は行われていません"}
           </p>
+          {m.status === "offered" && m.expiresAt && (
+            <p className="muted">
+              {en ? "Accept by" : "承諾期限"}{" "}
+              {new Date(m.expiresAt).toLocaleTimeString()}
+            </p>
+          )}
+          {m.status === "expired" && (
+            <div className="notice">
+              {helper
+                ? en
+                  ? "This offer expired. It can no longer be accepted."
+                  : "承諾期限が過ぎたため、この依頼は承諾できません。"
+                : en
+                  ? "No response before the deadline. Find another helper from your request. Keep evacuating while waiting."
+                  : "期限までに応答がありませんでした。依頼から別の候補を探せます。待つ間も避難を優先してください。"}
+            </div>
+          )}
           <div className="form-actions">
             {helper && m.status === "offered" && (
               <>
@@ -127,6 +144,7 @@ export function MatchCards({ helper = false }: { helper?: boolean }) {
 export function MatchingPage() {
   const en = useAppStore((s) => s.language) === "en",
     requests = useRequests(),
+    matches = useMatches(),
     client = useQueryClient();
   const recommend = useMutation({
     mutationFn: async (id: string) =>
@@ -168,7 +186,15 @@ export function MatchingPage() {
                   disabled={recommend.isPending}
                   onClick={() => recommend.mutate(r.id)}
                 >
-                  {en ? "Find a helper" : "候補を探す"}
+                  {matches.data?.some(
+                    (m) => m.requestId === r.id && m.status === "expired",
+                  )
+                    ? en
+                      ? "Find another helper"
+                      : "別の候補を探す"
+                    : en
+                      ? "Find a helper"
+                      : "候補を探す"}
                 </IonButton>
               )}
               {[

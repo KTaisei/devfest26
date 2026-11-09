@@ -76,7 +76,8 @@ export function useMatchAction() {
         return api.post(`/matches/${id}/progress`, { status: action });
       return api.post(`/matches/${id}/${action}`);
     },
-    onSuccess: () => {
+    // A rejected late acceptance can still expire the offer on the server.
+    onSettled: () => {
       void client.invalidateQueries({ queryKey: ["matches"] });
       void client.invalidateQueries({ queryKey: ["requests"] });
     },

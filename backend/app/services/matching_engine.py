@@ -11,6 +11,52 @@ from .route_optimizer import graph, nearest, now, paths, roads
 ACTIVE = {"offered", "accepted", "meeting", "assisting"}
 
 
+OFFER_LIFETIME = timedelta(minutes=5)
+
+
+def offer_expires_at(match):
+    # Derive from createdAt so offers created by older API versions also expire.
+    return datetime.fromisoformat(match["createdAt"]) + OFFER_LIFETIME
+
+
+def expire_offers(uid=None):
+    """Expire only pending offers; accepting/cancelling races are rechecked atomically.
+
+    A request returns to waiting and keeps its claim so it can be retried without
+    permitting duplicate requests. No helper claim exists until acceptance.
+    """
+    at = datetime.now(timezone.utc)
+    count = 0
+    for candidate in repository.store.scan("matches"):
+        if (
+            candidate["status"] != "offered"
+            or (uid is not None and uid not in {candidate["requesterId"], candidate["helperId"]})
+            or offer_expires_at(candidate) > at
+        ):
+            continue
+
+        def expire(tx):
+            match = tx.get("matches", candidate["id"])
+            if not match or match["status"] != "offered" or offer_expires_at(match) > at:
+                return 0
+            request = tx.get("support_requests", match["requestId"])
+            claim = tx.get("request_claims", match["requesterId"])
+            tx.put(
+                "matches", match["id"], {**match, "status": "expired", "updatedAt": at.isoformat()}
+            )
+            if (
+                request
+                and request["status"] == "offered"
+                and claim
+                and claim["requestId"] == request["id"]
+            ):
+                tx.put("support_requests", request["id"], {**request, "status": "waiting"})
+            return 1
+
+        count += repository.store.atomic(expire)
+    return count
+
+
 def fresh(location):
     return (
         location
@@ -79,6 +125,7 @@ def create_request(uid, payload: RequestInput):
 
 
 def recommend(uid, request_id):
+    expire_offers(uid)
     request = repository.store.get("support_requests", request_id)
     if not request or request["uid"] != uid:
         raise HTTPException(404, "Request not found")
@@ -97,11 +144,18 @@ def recommend(uid, request_id):
     # At least one onward evacuation candidate is required for the requester.
     if not paths(target, request["disasterType"], constraints, edge_snapshot):
         return []
+    # A retry advances to an untried helper; do not repeatedly notify an expired offer.
+    tried_helpers = {
+        match["helperId"]
+        for match in repository.store.scan("matches")
+        if match["requestId"] == request_id and match["status"] in {"expired", "rejected"}
+    }
     candidates = []
     for helper in repository.store.scan("users"):
         helper_uid = helper["uid"]
         if (
             helper_uid == uid
+            or helper_uid in tried_helpers
             or not helper["isAvailableToHelp"]
             or not helper["locationSharingEnabled"]
         ):
@@ -148,6 +202,7 @@ def recommend(uid, request_id):
     if not candidates:
         return []
     arrival, helper = min(candidates, key=lambda candidate: candidate[0])
+    created_at = now()
     match = {
         "id": uuid4().hex,
         "requestId": request_id,
@@ -158,8 +213,9 @@ def recommend(uid, request_id):
         "supportType": request["supportType"],
         "estimatedSeconds": round(arrival),
         "status": "offered",
-        "updatedAt": now(),
-        "createdAt": now(),
+        "updatedAt": created_at,
+        "createdAt": created_at,
+        "expiresAt": (datetime.fromisoformat(created_at) + OFFER_LIFETIME).isoformat(),
         "dataStatus": "simulation",
     }
 
@@ -175,6 +231,10 @@ def recommend(uid, request_id):
 
 
 def transition(uid, match_id, action):
+    # Persist expiry before rejecting a late action; an exception inside atomic()
+    # would roll back that status update in both memory and Firestore.
+    expire_offers(uid)
+
     def commit(tx):
         match = tx.get("matches", match_id)
         if not match or uid not in {match["requesterId"], match["helperId"]}:
@@ -201,10 +261,8 @@ def transition(uid, match_id, action):
         elif action == "completed" and match["status"] != "assisting":
             raise HTTPException(409, "Start assisting before completion")
         if action == "accepted":
-            if (
-                datetime.now(timezone.utc) - datetime.fromisoformat(match["createdAt"])
-            ).total_seconds() > 300:
-                raise HTTPException(409, "Offer expired; cancel and request again")
+            if offer_expires_at(match) <= datetime.now(timezone.utc):
+                raise HTTPException(409, "Offer expired; refresh and find another helper")
             if (
                 helper_claim
                 or helper_request

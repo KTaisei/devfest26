@@ -8,6 +8,7 @@ from .core.config import settings
 from .core.store import initialize_store
 from .core.firebase import initialize_firebase
 from .services.retention import purge_expired_locations
+from .services.matching_engine import expire_offers
 
 
 @asynccontextmanager
@@ -19,8 +20,9 @@ async def lifespan(app):
         while True:
             try:
                 await asyncio.to_thread(purge_expired_locations)
+                await asyncio.to_thread(expire_offers)
             except Exception:
-                logging.getLogger(__name__).exception("Location retention cleanup failed")
+                logging.getLogger(__name__).exception("Simulation maintenance failed")
             await asyncio.sleep(60)
 
     task = asyncio.create_task(cleanup())

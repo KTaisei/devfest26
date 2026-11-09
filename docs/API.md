@@ -48,6 +48,14 @@
 
 返却は `candidate_found` または `no_route`。geometryはGeoJSONなので座標は **[経度, 緯度]**、Mapsへの変換では `{lat: 緯度, lng: 経度}` にします。`edgeIds` と `checkedAt` により経路の根拠と計算時刻を確認できます。`dataStatus` は常に `simulation`。
 
+## オファーの期限切れと再探索
+
+新しいマッチには `expiresAt`（ISO日時）が入り、作成から5分を承諾期限とします。旧レコードではnullですが、サーバーは `createdAt` から同じ期限を適用します。期限ちょうど以降の承諾は409です。
+
+本人の `GET /matches/me`、`GET /support-requests/me`、候補探索・状態変更と定期保守で、未承諾オファーを `expired` に確定します。元の要請は `waiting` に戻り、依頼者claimは保持します。`POST /matches/recommend` に同じrequestIdを渡すと未試行の支援者へオファーし、期限切れの相手へ繰り返し送信しません。未試行の候補がなければ200・空配列です。候補探索は利用者の操作で実行し、自動再依頼は行いません。
+
+承諾・取消と失効が重なった場合はトランザクション内の最新状態を使います。承諾済みマッチを期限切れにせず、取り消した依頼を待機中へ戻しません。
+
 ## エラー
 
 401：未認証・期限切れ。403：同意または管理権限なし。404：対象なし・第三者の非公開資源。409：状態競合、プロフィール変更不可、位置期限切れ、他の依頼で支援者が確定、道路変更。422：入力不正、ネットワーク範囲外、位置共有の未同意。候補なしは200で空配列です。救助機関への通報を代行するAPIはありません。
@@ -55,7 +63,7 @@
 ## 生成型の更新
 
 ```sh
-backend/.venv/bin/python scripts/export_openapi.py
+npm run api:export
 npm run api:types
 npm run format
 npm run typecheck

@@ -977,6 +977,17 @@
             "type": "string",
             "title": "Updatedat"
           },
+          "expiresAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expiresat"
+          },
           "dataStatus": {
             "type": "string",
             "const": "simulation",

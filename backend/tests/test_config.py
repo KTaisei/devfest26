@@ -40,3 +40,33 @@ def test_cloud_run_rejects_emulator_mode(monkeypatch):
     monkeypatch.setenv("K_SERVICE", "tasuku-api")
     with pytest.raises(ValidationError, match="Cloud Run"):
         emulator_settings()
+
+
+def test_cloud_initialization_removes_empty_emulator_environment(monkeypatch):
+    from app.core import firebase
+    from google.cloud.firestore import Client
+    from google.auth.credentials import AnonymousCredentials
+
+    monkeypatch.setenv("FIRESTORE_EMULATOR_HOST", "")
+    monkeypatch.setenv("FIREBASE_AUTH_EMULATOR_HOST", "")
+    config = Settings(_env_file=None, firebase_project_id="tasuku-test")
+    monkeypatch.setattr(firebase, "settings", lambda: config)
+    monkeypatch.setattr(firebase.firebase_admin, "_apps", {"already-initialized": object()})
+    firebase.initialize_firebase()
+    # Inspect SDK routing without credentials or a network request.
+    client = Client(project="tasuku-test", credentials=AnonymousCredentials())
+    assert client._emulator_host is None
+    assert "FIREBASE_AUTH_EMULATOR_HOST" not in firebase.os.environ
+
+
+def test_emulator_initialization_keeps_validated_hosts(monkeypatch):
+    from app.core import firebase
+
+    config = emulator_settings()
+    monkeypatch.setattr(firebase, "settings", lambda: config)
+    monkeypatch.setattr(firebase.firebase_admin, "_apps", {"already-initialized": object()})
+    for key in ("FIRESTORE_EMULATOR_HOST", "FIREBASE_AUTH_EMULATOR_HOST"):
+        monkeypatch.setenv(key, "")
+    firebase.initialize_firebase()
+    assert firebase.os.environ["FIRESTORE_EMULATOR_HOST"] == "127.0.0.1:8085"
+    assert firebase.os.environ["FIREBASE_AUTH_EMULATOR_HOST"] == "127.0.0.1:9099"
