@@ -7,6 +7,7 @@ import {
   peopleOutline,
   personOutline,
   optionsOutline,
+  informationCircleOutline,
   languageOutline,
   arrowForwardOutline,
   shieldCheckmarkOutline,
@@ -90,6 +91,10 @@ export function Layout({
                   : "支援を待つ間も、避難を続けてください。無理のない範囲でつながりましょう。"}
               </p>
             </div>
+            <NavLink className="admin-link" to="/welcome">
+              <IonIcon icon={informationCircleOutline} />
+              {en ? "How TASUKU works" : "使い方・はじめに"}
+            </NavLink>
             <NavLink className="admin-link" to="/admin">
               <IonIcon icon={optionsOutline} />
               {en ? "Simulation settings" : "デモ管理"}

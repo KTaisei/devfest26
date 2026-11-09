@@ -100,6 +100,15 @@ class RouteOutput(BaseModel):
     dataStatus: Literal["simulation"] = "simulation"
 
 
+class MeetingPoint(BaseModel):
+    nodeId: str
+    name: str | None = None
+    latitude: float
+    longitude: float
+    helperSeconds: int
+    requesterSeconds: int
+
+
 class RequestOutput(BaseModel):
     id: str
     uid: str
@@ -125,4 +134,5 @@ class MatchOutput(BaseModel):
     createdAt: str
     updatedAt: str
     expiresAt: str | None = None
+    meetingPoint: MeetingPoint | None = None
     dataStatus: Literal["simulation"] = "simulation"

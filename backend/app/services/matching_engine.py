@@ -6,7 +6,7 @@ import networkx as nx
 from fastapi import HTTPException
 from ..core import store as repository
 from ..models.schemas import Constraints, Location, RequestInput
-from .route_optimizer import graph, nearest, now, paths, roads
+from .route_optimizer import DATA, NODES, graph, nearest, now, paths, roads
 
 ACTIVE = {"offered", "accepted", "meeting", "assisting"}
 
@@ -75,6 +75,44 @@ def fresh(location):
         ).total_seconds()
         < 1800
     )
+
+
+def choose_meeting_point(helper_start, requester_start, hc, rc, edges):
+    """Pick a graph node both parties can reach under their own constraints.
+
+    Among nodes within one minute of the fastest combined travel time, a
+    shelter wins because it is the safer place to meet. The result is always
+    a public graph node, never a party's exact location.
+    """
+
+    def times(constraints, origin):
+        network = graph(constraints, edges)
+        lengths = nx.single_source_dijkstra_path_length(network, origin, weight="weight")
+        speed = constraints.walkingSpeedMetersPerSecond
+        return {node: length / speed for node, length in lengths.items()}
+
+    helper_times = times(hc, helper_start)
+    requester_times = times(rc, requester_start)
+    shelter_names = {s["nodeId"]: s["name"] for s in DATA["shelters"]}
+    scored = [
+        (helper_times[node] + requester_times[node], node)
+        for node in helper_times.keys() & requester_times.keys()
+    ]
+    if not scored:
+        return None
+    best = min(total for total, _ in scored)
+    near = [(total, node) for total, node in scored if total <= best + 60]
+    sheltered = [(total, node) for total, node in near if node in shelter_names]
+    _, node = min(sheltered or near)
+    point = NODES[node]
+    return {
+        "nodeId": node,
+        "name": shelter_names.get(node),
+        "latitude": point["latitude"],
+        "longitude": point["longitude"],
+        "helperSeconds": round(helper_times[node]),
+        "requesterSeconds": round(requester_times[node]),
+    }
 
 
 def constraints_for(profile):
@@ -258,6 +296,7 @@ def transition(uid, match_id, action):
         requester_claim = tx.get("request_claims", match["requesterId"])
         requester_profile = tx.get("users", match["requesterId"])
         edge_snapshot = roads(tx)
+        meeting_point = None
         # All reads precede writes for Firestore transaction compatibility.
         if match["status"] not in ACTIVE or request["status"] not in ACTIVE:
             raise HTTPException(409, "Match is no longer active")
@@ -323,6 +362,7 @@ def transition(uid, match_id, action):
                 and helper["preferredLanguage"] != request["language"]
             ):
                 raise HTTPException(409, "Helper capabilities changed")
+            meeting_point = choose_meeting_point(start, target, hc, rc, edge_snapshot)
             tx.put("helper_claims", match["helperId"], {"matchId": match_id})
         if action in {"cancelled", "completed", "rejected"}:
             if helper_claim and helper_claim["matchId"] == match_id:
@@ -330,6 +370,8 @@ def transition(uid, match_id, action):
             if requester_claim and requester_claim["requestId"] == request["id"]:
                 tx.delete("request_claims", match["requesterId"])
         updated = {**match, "status": action, "updatedAt": now()}
+        if meeting_point is not None:
+            updated["meetingPoint"] = meeting_point
         tx.put("matches", match_id, updated)
         tx.put("support_requests", request["id"], {**request, "status": action})
         return updated
