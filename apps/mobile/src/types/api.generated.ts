@@ -456,12 +456,28 @@ export interface components {
       updatedAt: string;
       /** Expiresat */
       expiresAt?: string | null;
+      meetingPoint?: components["schemas"]["MeetingPoint"] | null;
       /**
        * Datastatus
        * @default simulation
        * @constant
        */
       dataStatus: "simulation";
+    };
+    /** MeetingPoint */
+    MeetingPoint: {
+      /** Nodeid */
+      nodeId: string;
+      /** Name */
+      name?: string | null;
+      /** Latitude */
+      latitude: number;
+      /** Longitude */
+      longitude: number;
+      /** Helperseconds */
+      helperSeconds: number;
+      /** Requesterseconds */
+      requesterSeconds: number;
     };
     /** Profile */
     Profile: {
