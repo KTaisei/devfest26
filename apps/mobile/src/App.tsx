@@ -3,6 +3,8 @@ import { IonApp, IonRouterOutlet, setupIonicReact } from "@ionic/react";
 import { IonReactRouter } from "@ionic/react-router";
 import { Redirect, Route } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { WelcomePage } from "./pages/WelcomePage";
+import { hasSeenOnboarding } from "./services/onboarding";
 import { HomePage } from "./pages/HomePage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { SupportPage } from "./pages/SupportPage";
@@ -29,6 +31,7 @@ export default function App() {
     <IonApp>
       <IonReactRouter>
         <IonRouterOutlet>
+          <Route exact path="/welcome" component={WelcomePage} />
           <Route exact path="/home" component={HomePage} />
           <Route exact path="/profile" component={ProfilePage} />
           <Route exact path="/support" component={SupportPage} />
@@ -36,7 +39,7 @@ export default function App() {
           <Route exact path="/matching" component={MatchingPage} />
           <Route exact path="/admin" component={AdminPage} />
           <Route exact path="/">
-            <Redirect to="/home" />
+            <Redirect to={hasSeenOnboarding() ? "/home" : "/welcome"} />
           </Route>
           <Route>
             <Redirect to="/home" />
