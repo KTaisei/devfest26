@@ -28,11 +28,11 @@ const sections = [
   {
     ja: {
       title: "位置情報について",
-      body: "位置の共有は任意で、あなたが明示的に同意したときだけ行われます。共有した位置は30分で自動的に削除され、あなたの正確な位置が他の参加者に表示されることはありません。",
+      body: "位置の共有は任意で、あなたが明示的に同意したときだけ行われます。共有した位置は30分でマッチングに使えなくなり、期限切れデータを順次削除します。当事者の正確な現在地は他の参加者に表示せず、承諾後は選ばれた模擬合流地点を両者に共有します。",
     },
     en: {
       title: "About your location",
-      body: "Location sharing is optional and happens only with your explicit consent. A shared location is deleted automatically after 30 minutes, and your exact position is never shown to other participants.",
+      body: "Location sharing is optional and happens only with your explicit consent. A shared location becomes unavailable for matching after 30 minutes, then expired data is deleted asynchronously. Your exact current position is not shown to other participants. Once accepted, both participants see the selected fictional meeting point.",
     },
   },
   {
@@ -69,7 +69,7 @@ export function WelcomePage() {
           const text = en ? section.en : section.ja;
           return (
             <section className="match-card" key={text.title}>
-              <h3>{text.title}</h3>
+              <h2>{text.title}</h2>
               <p>{text.body}</p>
             </section>
           );

@@ -77,12 +77,13 @@ def fresh(location):
     )
 
 
-def choose_meeting_point(helper_start, requester_start, hc, rc, edges):
+def choose_meeting_point(helper_start, requester_start, hc, rc, edges, disaster):
     """Pick a graph node both parties can reach under their own constraints.
 
-    Among nodes within one minute of the fastest combined travel time, a
-    shelter wins because it is the safer place to meet. The result is always
-    a public graph node, never a party's exact location.
+    Validate a combined onward evacuation and the existing helper detour limit.
+    Within one minute of the fastest eligible combined arrival, prefer a shelter
+    compatible with the disaster/mobility settings. This is a simulation scoring
+    rule, not a claim that a place is safe. Only public graph nodes are returned.
     """
 
     def times(constraints, origin):
@@ -93,11 +94,33 @@ def choose_meeting_point(helper_start, requester_start, hc, rc, edges):
 
     helper_times = times(hc, helper_start)
     requester_times = times(rc, requester_start)
-    shelter_names = {s["nodeId"]: s["name"] for s in DATA["shelters"]}
-    scored = [
-        (helper_times[node] + requester_times[node], node)
-        for node in helper_times.keys() & requester_times.keys()
-    ]
+    combined = Constraints(
+        avoidStairs=hc.avoidStairs or rc.avoidStairs,
+        wheelchair=hc.wheelchair or rc.wheelchair,
+        walkingSpeedMetersPerSecond=min(
+            hc.walkingSpeedMetersPerSecond, rc.walkingSpeedMetersPerSecond
+        ),
+    )
+    direct = paths(helper_start, disaster, hc, edges)
+    if not direct:
+        return None
+    shelters = {s["nodeId"]: s for s in DATA["shelters"]}
+    shelter_names = {}
+    scored = []
+    for node in helper_times.keys() & requester_times.keys():
+        shelter = shelters.get(node)
+        if shelter:
+            if disaster not in shelter["disasterTypes"] or (
+                combined.wheelchair and not shelter["accessible"]
+            ):
+                continue
+            shelter_names[node] = shelter["name"]
+        onward = paths(node, disaster, combined, edges)
+        if not onward or helper_times[node] > 600 or requester_times[node] > 600:
+            continue
+        if helper_times[node] + onward[0]["estimatedSeconds"] - direct[0]["estimatedSeconds"] > 600:
+            continue
+        scored.append((helper_times[node] + requester_times[node], node))
     if not scored:
         return None
     best = min(total for total, _ in scored)
@@ -362,7 +385,11 @@ def transition(uid, match_id, action):
                 and helper["preferredLanguage"] != request["language"]
             ):
                 raise HTTPException(409, "Helper capabilities changed")
-            meeting_point = choose_meeting_point(start, target, hc, rc, edge_snapshot)
+            meeting_point = choose_meeting_point(
+                start, target, hc, rc, edge_snapshot, request["disasterType"]
+            )
+            if meeting_point is None:
+                raise HTTPException(409, "No eligible meeting point; refresh or cancel this offer")
             tx.put("helper_claims", match["helperId"], {"matchId": match_id})
         if action in {"cancelled", "completed", "rejected"}:
             if helper_claim and helper_claim["matchId"] == match_id:

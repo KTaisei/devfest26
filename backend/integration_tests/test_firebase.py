@@ -58,7 +58,17 @@ def test_firestore_full_flow_and_participant_visibility(client):
     match = offer(client, requester, request(client, requester)["id"])
     match_id = match["id"]
     assert client.get("/api/v1/matches/me", headers=stranger).json() == []
-    assert client.post(f"/api/v1/matches/{match_id}/accept", headers=helper).status_code == 200
+    assert match["meetingPoint"] is None
+    accepted = client.post(f"/api/v1/matches/{match_id}/accept", headers=helper)
+    assert accepted.status_code == 200
+    point = accepted.json()["meetingPoint"]
+    assert point["nodeId"] == "station"
+    from app.core import store as repository
+
+    repository.store = repository.FirestoreStore()
+    for headers in [requester, helper]:
+        assert client.get("/api/v1/matches/me", headers=headers).json()[0]["meetingPoint"] == point
+    assert client.get("/api/v1/matches/me", headers=stranger).json() == []
     for status in ["meeting", "assisting"]:
         assert (
             client.post(

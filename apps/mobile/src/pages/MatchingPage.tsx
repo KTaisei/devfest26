@@ -61,9 +61,13 @@ export function MatchCards({ helper = false }: { helper?: boolean }) {
             ["accepted", "meeting", "assisting", "completed"].includes(
               m.status,
             ) && (
-              <p>
-                {en ? "Meeting point" : "合流地点"}：
-                {m.meetingPoint.name ?? m.meetingPoint.nodeId}
+              <div className="notice">
+                <strong>
+                  {en ? "Fictional meeting point" : "模擬合流地点"}
+                </strong>
+                ：
+                {m.meetingPoint.name ??
+                  `${en ? "Node" : "地点"} ${m.meetingPoint.nodeId}`}
                 <span className="muted">
                   {" "}
                   ({en ? "helper" : "支援者"} {en ? "approx." : "約"}
@@ -73,7 +77,12 @@ export function MatchCards({ helper = false }: { helper?: boolean }) {
                   {Math.ceil(m.meetingPoint.requesterSeconds / 60)}
                   {en ? " min" : "分"})
                 </span>
-              </p>
+                <p className="muted">
+                  {en
+                    ? "Calculated when accepted using fictional roads. If conditions change, cancel and request again. Do not use for real evacuation."
+                    : "承諾時の架空道路で計算した地点です。道路条件が変わった場合は中止して再依頼してください。実際の避難には使えません。"}
+                </p>
+              </div>
             )}
           <p className="muted">
             {en

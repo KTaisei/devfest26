@@ -108,13 +108,19 @@ export function Layout({
               <span className="breadcrumb">
                 TASUKU <span>/</span> {title}
               </span>
-              <button
-                className="language-button"
-                onClick={() => setLanguage(en ? "ja" : "en")}
-              >
-                <IonIcon icon={languageOutline} />
-                {en ? "日本語" : "English"}
-              </button>
+              <div className="topbar-actions">
+                <NavLink className="language-button guide-link" to="/welcome">
+                  <IonIcon icon={informationCircleOutline} />
+                  {en ? "Guide" : "使い方"}
+                </NavLink>
+                <button
+                  className="language-button"
+                  onClick={() => setLanguage(en ? "ja" : "en")}
+                >
+                  <IonIcon icon={languageOutline} />
+                  {en ? "日本語" : "English"}
+                </button>
+              </div>
             </header>
             <div className="simulation-label">
               <span className="status-dot" />

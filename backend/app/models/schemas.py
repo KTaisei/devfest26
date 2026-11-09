@@ -103,10 +103,10 @@ class RouteOutput(BaseModel):
 class MeetingPoint(BaseModel):
     nodeId: str
     name: str | None = None
-    latitude: float
-    longitude: float
-    helperSeconds: int
-    requesterSeconds: int
+    latitude: float = Field(ge=-90, le=90)
+    longitude: float = Field(ge=-180, le=180)
+    helperSeconds: int = Field(ge=0)
+    requesterSeconds: int = Field(ge=0)
 
 
 class RequestOutput(BaseModel):

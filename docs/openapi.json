@@ -1040,18 +1040,24 @@
           },
           "latitude": {
             "type": "number",
+            "maximum": 90.0,
+            "minimum": -90.0,
             "title": "Latitude"
           },
           "longitude": {
             "type": "number",
+            "maximum": 180.0,
+            "minimum": -180.0,
             "title": "Longitude"
           },
           "helperSeconds": {
             "type": "integer",
+            "minimum": 0.0,
             "title": "Helperseconds"
           },
           "requesterSeconds": {
             "type": "integer",
+            "minimum": 0.0,
             "title": "Requesterseconds"
           }
         },
