@@ -104,6 +104,7 @@ def test_accept_rechecks_roads_and_offer_expiry(client):
     # Even if the road reopens, an old offer cannot be accepted.
     repository.store.data["road_status"] = {}
     m["createdAt"] = (datetime.now(timezone.utc) - timedelta(minutes=6)).isoformat()
+    m["expiresAt"] = (datetime.now(timezone.utc) - timedelta(minutes=1)).isoformat()
     repository.store.put("matches", m["id"], m)
     assert client.post(f"/api/v1/matches/{m['id']}/accept", headers=b).status_code == 409
 
@@ -119,6 +120,49 @@ def test_duplicate_request_prevented_and_cancel_releases_claim(client):
     assert client.post("/api/v1/support-requests", headers=a, json=payload).status_code == 409
     assert client.post(f"/api/v1/support-requests/{r['id']}/cancel", headers=a).status_code == 200
     assert client.post("/api/v1/support-requests", headers=a, json=payload).status_code == 201
+
+
+def age_offer(match, minutes=6):
+    stale = dict(match)
+    stale["createdAt"] = (datetime.now(timezone.utc) - timedelta(minutes=minutes)).isoformat()
+    stale["expiresAt"] = (datetime.now(timezone.utc) - timedelta(minutes=minutes - 5)).isoformat()
+    repository.store.put("matches", match["id"], stale)
+    return stale
+
+
+def test_offer_carries_a_five_minute_expiry(client):
+    _, a = identity(client)
+    identity(client, helper=True)
+    m = offer(client, a, request(client, a)["id"]).json()[0]
+    delta = datetime.fromisoformat(m["expiresAt"]) - datetime.fromisoformat(m["createdAt"])
+    assert delta == timedelta(minutes=5)
+
+
+def test_expired_offer_moves_to_the_next_helper(client):
+    _, a = identity(client, "Requester")
+    first, _ = identity(client, "First", helper=True)
+    second, _ = identity(client, "Second", helper=True)
+    r = request(client, a)
+    m = offer(client, a, r["id"]).json()[0]
+    assert m["helperId"] == first
+    age_offer(m)
+    renewed = offer(client, a, r["id"]).json()
+    assert repository.store.get("matches", m["id"])["status"] == "expired"
+    assert len(renewed) == 1 and renewed[0]["helperId"] == second
+    assert repository.store.get("support_requests", r["id"])["status"] == "offered"
+
+
+def test_expired_offer_without_another_helper_returns_to_waiting(client):
+    _, a = identity(client, "Requester")
+    identity(client, "Only", helper=True)
+    r = request(client, a)
+    m = offer(client, a, r["id"]).json()[0]
+    age_offer(m)
+    mine = client.get("/api/v1/matches/me", headers=a).json()
+    assert mine[0]["status"] == "expired"
+    assert repository.store.get("support_requests", r["id"])["status"] == "waiting"
+    # The lapsed helper is not offered the same request again.
+    assert offer(client, a, r["id"]).json() == []
 
 
 def test_translation_fallback_is_explicit(client):

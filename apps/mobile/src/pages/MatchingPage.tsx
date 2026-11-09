@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { IonButton } from "@ionic/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Layout, ErrorNotice } from "../components/Layout";
@@ -36,6 +37,12 @@ export function MatchCards({ helper = false }: { helper?: boolean }) {
       ? m.helperId === session.data?.uid
       : m.requesterId === session.data?.uid,
   );
+  // Countdown is advisory; only the server may confirm expiry, including clock skew.
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = setInterval(() => setNowMs(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, []);
   return (
     <>
       <ErrorNotice error={matches.error} />
@@ -59,6 +66,17 @@ export function MatchCards({ helper = false }: { helper?: boolean }) {
             <p className="muted">
               {en ? "Accept by" : "承諾期限"}{" "}
               {new Date(m.expiresAt).toLocaleTimeString()}
+              {" · "}
+              {Math.max(
+                0,
+                Math.ceil((Date.parse(m.expiresAt) - nowMs) / 1000),
+              ) > 0
+                ? en
+                  ? `${Math.ceil((Date.parse(m.expiresAt) - nowMs) / 1000)} seconds remaining`
+                  : `あと${Math.ceil((Date.parse(m.expiresAt) - nowMs) / 1000)}秒`
+                : en
+                  ? "Checking server status…"
+                  : "サーバーの状態を確認中…"}
             </p>
           )}
           {m.status === "expired" && (

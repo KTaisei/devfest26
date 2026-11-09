@@ -15,45 +15,55 @@ OFFER_LIFETIME = timedelta(minutes=5)
 
 
 def offer_expires_at(match):
-    # Derive from createdAt so offers created by older API versions also expire.
+    if match.get("expiresAt"):
+        return datetime.fromisoformat(match["expiresAt"])
+    # Offers recorded before expiresAt existed keep their original five-minute deadline.
     return datetime.fromisoformat(match["createdAt"]) + OFFER_LIFETIME
 
 
-def expire_offers(uid=None):
-    """Expire only pending offers; accepting/cancelling races are rechecked atomically.
+def offer_is_expired(match, at=None):
+    return match["status"] == "offered" and offer_expires_at(match) <= (
+        at or datetime.now(timezone.utc)
+    )
 
-    A request returns to waiting and keeps its claim so it can be retried without
-    permitting duplicate requests. No helper claim exists until acceptance.
+
+def expire_offer(match_id, at=None):
+    """Lapse one offer atomically without undoing concurrent acceptance or cancellation."""
+    at = at or datetime.now(timezone.utc)
+
+    def expire(tx):
+        match = tx.get("matches", match_id)
+        if not match or not offer_is_expired(match, at):
+            return None
+        request = tx.get("support_requests", match["requestId"])
+        claim = tx.get("request_claims", match["requesterId"])
+        expired = {**match, "status": "expired", "updatedAt": at.isoformat()}
+        tx.put("matches", match_id, expired)
+        if (
+            request
+            and request["status"] == "offered"
+            and claim
+            and claim["requestId"] == request["id"]
+        ):
+            tx.put("support_requests", request["id"], {**request, "status": "waiting"})
+        return expired
+
+    return repository.store.atomic(expire)
+
+
+def expire_offers(uid=None):
+    """Expire pending offers for polling/maintenance, keeping the request's existing claim.
+
+    A waiting request can be retried without allowing duplicate active requests.
+    No helper claim exists until acceptance. Recheck state inside expire_offer().
     """
     at = datetime.now(timezone.utc)
     count = 0
     for candidate in repository.store.scan("matches"):
-        if (
-            candidate["status"] != "offered"
-            or (uid is not None and uid not in {candidate["requesterId"], candidate["helperId"]})
-            or offer_expires_at(candidate) > at
-        ):
+        if uid is not None and uid not in {candidate["requesterId"], candidate["helperId"]}:
             continue
-
-        def expire(tx):
-            match = tx.get("matches", candidate["id"])
-            if not match or match["status"] != "offered" or offer_expires_at(match) > at:
-                return 0
-            request = tx.get("support_requests", match["requestId"])
-            claim = tx.get("request_claims", match["requesterId"])
-            tx.put(
-                "matches", match["id"], {**match, "status": "expired", "updatedAt": at.isoformat()}
-            )
-            if (
-                request
-                and request["status"] == "offered"
-                and claim
-                and claim["requestId"] == request["id"]
-            ):
-                tx.put("support_requests", request["id"], {**request, "status": "waiting"})
-            return 1
-
-        count += repository.store.atomic(expire)
+        if offer_is_expired(candidate, at):
+            count += expire_offer(candidate["id"], at) is not None
     return count
 
 
@@ -261,7 +271,7 @@ def transition(uid, match_id, action):
         elif action == "completed" and match["status"] != "assisting":
             raise HTTPException(409, "Start assisting before completion")
         if action == "accepted":
-            if offer_expires_at(match) <= datetime.now(timezone.utc):
+            if offer_is_expired(match):
                 raise HTTPException(409, "Offer expired; refresh and find another helper")
             if (
                 helper_claim

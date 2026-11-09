@@ -80,6 +80,7 @@ def test_firestore_expiry_and_retry_preserve_request_claim(client):
     r = request(client, requester)
     first = offer(client, requester, r["id"])
     first["createdAt"] = (datetime.now(timezone.utc) - timedelta(minutes=6)).isoformat()
+    first["expiresAt"] = (datetime.now(timezone.utc) - timedelta(minutes=1)).isoformat()
     repository.store.put("matches", first["id"], first)
     assert client.get("/api/v1/matches/me", headers=helper).json()[0]["status"] == "expired"
     assert client.post(f"/api/v1/matches/{first['id']}/accept", headers=helper).status_code == 409

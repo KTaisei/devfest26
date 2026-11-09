@@ -9,6 +9,9 @@ from test_matching import offer
 
 def age_offer(match):
     match = {**match, "createdAt": (datetime.now(timezone.utc) - timedelta(minutes=6)).isoformat()}
+    match["expiresAt"] = (
+        datetime.fromisoformat(match["createdAt"]) + timedelta(minutes=5)
+    ).isoformat()
     repository.store.put("matches", match["id"], match)
     return match
 
@@ -70,6 +73,9 @@ def test_expiry_rechecks_state_after_acceptance_or_cancellation(
     assert client.post(f"/api/v1/matches/{m['id']}/{action}", headers=b).status_code == 200
     stale = {**m, "createdAt": (datetime.now(timezone.utc) - timedelta(minutes=6)).isoformat()}
     # Emulate a scan taken before a concurrent acceptance/cancellation committed.
+    stale["expiresAt"] = (
+        datetime.fromisoformat(stale["createdAt"]) + timedelta(minutes=5)
+    ).isoformat()
     scan = repository.store.scan
     monkeypatch.setattr(
         repository.store, "scan", lambda name: [stale] if name == "matches" else scan(name)
