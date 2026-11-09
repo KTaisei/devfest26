@@ -1,4 +1,5 @@
 import { IonButton } from "@ionic/react";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Layout, ErrorNotice } from "../components/Layout";
 import {
@@ -36,86 +37,145 @@ export function MatchCards({ helper = false }: { helper?: boolean }) {
       ? m.helperId === session.data?.uid
       : m.requesterId === session.data?.uid,
   );
+  // Tick every second so offer countdowns and the lapsed state update live.
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = setInterval(() => setNowMs(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+  const client = useQueryClient();
+  const reRequest = useMutation({
+    mutationFn: async (requestId: string) =>
+      (await api.post<Match[]>("/matches/recommend", { requestId })).data,
+    onSuccess: () => {
+      void client.invalidateQueries({ queryKey: ["matches"] });
+      void client.invalidateQueries({ queryKey: ["requests"] });
+    },
+  });
   return (
     <>
       <ErrorNotice error={matches.error} />
       <ErrorNotice error={action.error} />
-      {items?.map((m) => (
-        <article className="match-card" key={m.id}>
-          <span className={`match-status ${m.status}`}>
-            {statusLabel(m.status, en)}
-          </span>
-          <h3>{helper ? m.requesterName : m.helperName}</h3>
-          <p>
-            {supportLabel(m.supportType, en)} · {en ? "Approx." : "到着目安"}{" "}
-            {Math.ceil(m.estimatedSeconds / 60)} {en ? "min" : "分"}
-          </p>
-          <p className="muted">
-            {en
-              ? "Anonymous participant · identity not verified"
-              : "匿名ユーザー・本人確認は行われていません"}
-          </p>
-          <div className="form-actions">
-            {helper && m.status === "offered" && (
-              <>
+      <ErrorNotice error={reRequest.error} />
+      {items?.map((m) => {
+        // The server lapses stale offers on read; mirror that here so the
+        // countdown and the expired state agree between refetches.
+        const expiresMs = m.expiresAt ? Date.parse(m.expiresAt) : null;
+        const status: MatchStatus =
+          m.status === "offered" && expiresMs !== null && expiresMs <= nowMs
+            ? "expired"
+            : m.status;
+        const remainingSec =
+          m.status === "offered" && expiresMs !== null
+            ? Math.max(0, Math.ceil((expiresMs - nowMs) / 1000))
+            : null;
+        return (
+          <article className="match-card" key={m.id}>
+            <span className={`match-status ${status}`}>
+              {statusLabel(status, en)}
+            </span>
+            <h3>{helper ? m.requesterName : m.helperName}</h3>
+            <p>
+              {supportLabel(m.supportType, en)} · {en ? "Approx." : "到着目安"}{" "}
+              {Math.ceil(m.estimatedSeconds / 60)} {en ? "min" : "分"}
+            </p>
+            <p className="muted">
+              {en
+                ? "Anonymous participant · identity not verified"
+                : "匿名ユーザー・本人確認は行われていません"}
+            </p>
+            {remainingSec !== null && status === "offered" && (
+              <p className="muted">
+                {en
+                  ? `Answer within ${Math.floor(remainingSec / 60)}:${String(remainingSec % 60).padStart(2, "0")}`
+                  : `回答期限まで あと${Math.floor(remainingSec / 60)}分${remainingSec % 60}秒`}
+              </p>
+            )}
+            {status === "expired" && (
+              <p className="muted">
+                {en
+                  ? "This offer lapsed without an answer."
+                  : "回答がないまま期限を過ぎました。"}
+              </p>
+            )}
+            <div className="form-actions">
+              {!helper && status === "expired" && (
+                <IonButton
+                  disabled={reRequest.isPending}
+                  onClick={() => reRequest.mutate(m.requestId)}
+                >
+                  {en ? "Find the next helper" : "次の候補を探す"}
+                </IonButton>
+              )}
+              {helper && status === "offered" && (
+                <>
+                  <IonButton
+                    disabled={action.isPending}
+                    onClick={() =>
+                      action.mutate({ id: m.id, action: "accept" })
+                    }
+                  >
+                    {en ? "Agree and accept" : "同意して承諾"}
+                  </IonButton>
+                  <IonButton
+                    fill="outline"
+                    disabled={action.isPending}
+                    onClick={() =>
+                      action.mutate({ id: m.id, action: "reject" })
+                    }
+                  >
+                    {en ? "Decline" : "辞退する"}
+                  </IonButton>
+                </>
+              )}
+              {m.status === "accepted" && (
                 <IonButton
                   disabled={action.isPending}
-                  onClick={() => action.mutate({ id: m.id, action: "accept" })}
+                  onClick={() => action.mutate({ id: m.id, action: "meeting" })}
                 >
-                  {en ? "Agree and accept" : "同意して承諾"}
+                  {en ? "Start meeting" : "合流へ進む"}
                 </IonButton>
+              )}
+              {m.status === "meeting" && (
                 <IonButton
-                  fill="outline"
                   disabled={action.isPending}
-                  onClick={() => action.mutate({ id: m.id, action: "reject" })}
+                  onClick={() =>
+                    action.mutate({ id: m.id, action: "assisting" })
+                  }
                 >
-                  {en ? "Decline" : "辞退する"}
+                  {en ? "Met, start helping" : "合流した・支援開始"}
                 </IonButton>
-              </>
-            )}
-            {m.status === "accepted" && (
-              <IonButton
-                disabled={action.isPending}
-                onClick={() => action.mutate({ id: m.id, action: "meeting" })}
-              >
-                {en ? "Start meeting" : "合流へ進む"}
-              </IonButton>
-            )}
-            {m.status === "meeting" && (
-              <IonButton
-                disabled={action.isPending}
-                onClick={() => action.mutate({ id: m.id, action: "assisting" })}
-              >
-                {en ? "Met, start helping" : "合流した・支援開始"}
-              </IonButton>
-            )}
-            {m.status === "assisting" && (
-              <IonButton
-                disabled={action.isPending}
-                onClick={() => action.mutate({ id: m.id, action: "complete" })}
-              >
-                {en ? "Complete" : "支援を完了"}
-              </IonButton>
-            )}
-            {["offered", "accepted", "meeting", "assisting"].includes(
-              m.status,
-            ) && (
-              <IonButton
-                fill="clear"
-                color="danger"
-                disabled={action.isPending}
-                onClick={() => action.mutate({ id: m.id, action: "cancel" })}
-              >
-                {en ? "Stop assistance" : "支援を中止"}
-              </IonButton>
-            )}
-          </div>
-          <small>
-            {en ? "Updated" : "更新"}{" "}
-            {new Date(m.updatedAt).toLocaleTimeString()}
-          </small>
-        </article>
-      ))}
+              )}
+              {m.status === "assisting" && (
+                <IonButton
+                  disabled={action.isPending}
+                  onClick={() =>
+                    action.mutate({ id: m.id, action: "complete" })
+                  }
+                >
+                  {en ? "Complete" : "支援を完了"}
+                </IonButton>
+              )}
+              {["offered", "accepted", "meeting", "assisting"].includes(
+                status,
+              ) && (
+                <IonButton
+                  fill="clear"
+                  color="danger"
+                  disabled={action.isPending}
+                  onClick={() => action.mutate({ id: m.id, action: "cancel" })}
+                >
+                  {en ? "Stop assistance" : "支援を中止"}
+                </IonButton>
+              )}
+            </div>
+            <small>
+              {en ? "Updated" : "更新"}{" "}
+              {new Date(m.updatedAt).toLocaleTimeString()}
+            </small>
+          </article>
+        );
+      })}
       {items?.length === 0 && (
         <div className="empty-state">
           {en ? "No matching activity yet." : "まだマッチングはありません。"}
