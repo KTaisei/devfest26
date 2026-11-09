@@ -10,6 +10,39 @@ from .route_optimizer import graph, nearest, now, paths, roads
 
 ACTIVE = {"offered", "accepted", "meeting", "assisting"}
 
+# An offer the helper does not answer within this window lapses automatically.
+OFFER_TTL_SECONDS = 300
+
+
+def offer_expires_at(match):
+    if match.get("expiresAt"):
+        return datetime.fromisoformat(match["expiresAt"])
+    # Offers recorded before expiresAt existed fall back to their creation time.
+    return datetime.fromisoformat(match["createdAt"]) + timedelta(seconds=OFFER_TTL_SECONDS)
+
+
+def offer_is_expired(match, at=None):
+    return match["status"] == "offered" and offer_expires_at(match) <= (
+        at or datetime.now(timezone.utc)
+    )
+
+
+def expire_offer(match_id):
+    """Lapse a stale offer and return its request to waiting for a re-request."""
+
+    def commit(tx):
+        match = tx.get("matches", match_id)
+        if not match or not offer_is_expired(match):
+            return None
+        request = tx.get("support_requests", match["requestId"])
+        expired = {**match, "status": "expired", "updatedAt": now()}
+        tx.put("matches", match_id, expired)
+        if request and request["status"] == "offered":
+            tx.put("support_requests", request["id"], {**request, "status": "waiting"})
+        return expired
+
+    return repository.store.atomic(commit)
+
 
 def fresh(location):
     return (
@@ -82,6 +115,12 @@ def recommend(uid, request_id):
     request = repository.store.get("support_requests", request_id)
     if not request or request["uid"] != uid:
         raise HTTPException(404, "Request not found")
+    if request["status"] == "offered":
+        # A lapsed offer frees the request so this call can search the next candidate.
+        for stale in repository.store.scan("matches"):
+            if stale["requestId"] == request_id and stale["status"] == "offered":
+                expire_offer(stale["id"])
+        request = repository.store.get("support_requests", request_id)
     if request["status"] != "waiting":
         return [
             m
@@ -97,11 +136,18 @@ def recommend(uid, request_id):
     # At least one onward evacuation candidate is required for the requester.
     if not paths(target, request["disasterType"], constraints, edge_snapshot):
         return []
+    # Sequential re-requests skip helpers whose offer already lapsed or was declined.
+    tried = {
+        m["helperId"]
+        for m in repository.store.scan("matches")
+        if m["requestId"] == request_id and m["status"] in {"expired", "rejected"}
+    }
     candidates = []
     for helper in repository.store.scan("users"):
         helper_uid = helper["uid"]
         if (
             helper_uid == uid
+            or helper_uid in tried
             or not helper["isAvailableToHelp"]
             or not helper["locationSharingEnabled"]
         ):
@@ -148,6 +194,7 @@ def recommend(uid, request_id):
     if not candidates:
         return []
     arrival, helper = min(candidates, key=lambda candidate: candidate[0])
+    created_at = now()
     match = {
         "id": uuid4().hex,
         "requestId": request_id,
@@ -158,8 +205,11 @@ def recommend(uid, request_id):
         "supportType": request["supportType"],
         "estimatedSeconds": round(arrival),
         "status": "offered",
-        "updatedAt": now(),
-        "createdAt": now(),
+        "updatedAt": created_at,
+        "createdAt": created_at,
+        "expiresAt": (
+            datetime.fromisoformat(created_at) + timedelta(seconds=OFFER_TTL_SECONDS)
+        ).isoformat(),
         "dataStatus": "simulation",
     }
 
@@ -201,9 +251,7 @@ def transition(uid, match_id, action):
         elif action == "completed" and match["status"] != "assisting":
             raise HTTPException(409, "Start assisting before completion")
         if action == "accepted":
-            if (
-                datetime.now(timezone.utc) - datetime.fromisoformat(match["createdAt"])
-            ).total_seconds() > 300:
+            if offer_is_expired(match):
                 raise HTTPException(409, "Offer expired; cancel and request again")
             if (
                 helper_claim

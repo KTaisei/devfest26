@@ -18,7 +18,7 @@ from ..models.schemas import (
     MatchOutput,
 )
 from ..services.route_optimizer import DATA, NODES, calculate, roads, now
-from ..services.matching_engine import ACTIVE, create_request, recommend, transition
+from ..services.matching_engine import ACTIVE, create_request, expire_offer, recommend, transition
 from ..services.gemini_service import EVENT, translate
 
 router = APIRouter(prefix="/api/v1")
@@ -168,6 +168,10 @@ def recommendations(payload: RecommendInput, user: Actor = Depends(actor)):
 
 @router.get("/matches/me", response_model=list[MatchOutput])
 def my_matches(user: Actor = Depends(actor)):
+    # Lapse stale offers on read so both parties see the same expired state.
+    for m in repository.store.scan("matches"):
+        if user.uid in {m["requesterId"], m["helperId"]}:
+            expire_offer(m["id"])
     return [
         m for m in repository.store.scan("matches") if user.uid in {m["requesterId"], m["helperId"]}
     ]
