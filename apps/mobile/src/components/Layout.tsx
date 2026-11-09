@@ -37,21 +37,25 @@ export function Layout({
     {
       to: "/home",
       label: en ? "Evacuation map" : "避難マップ",
+      mobileLabel: en ? "Map" : "マップ",
       icon: compassOutline,
     },
     {
       to: "/support",
       label: en ? "Request support" : "支援を求める",
+      mobileLabel: en ? "Request" : "支援依頼",
       icon: heartOutline,
     },
     {
       to: "/helper",
       label: en ? "Offer support" : "支援に協力する",
+      mobileLabel: en ? "Help" : "支援協力",
       icon: peopleOutline,
     },
     {
       to: "/profile",
       label: en ? "Your profile" : "プロフィール",
+      mobileLabel: en ? "Profile" : "プロフィール",
       icon: personOutline,
     },
   ];
@@ -106,7 +110,7 @@ export function Layout({
           <main className="main-area">
             <header className="topbar">
               <span className="breadcrumb">
-                TASUKU <span>/</span> {title}
+                TASUKU <span className="breadcrumb-page">/ {title}</span>
               </span>
               <div className="topbar-actions">
                 <NavLink className="language-button guide-link" to="/welcome">
@@ -145,9 +149,17 @@ export function Layout({
           </main>
           <nav className="mobile-nav" aria-label="Mobile navigation">
             {links.map((l) => (
-              <NavLink to={l.to} key={l.to} activeClassName="active">
+              <NavLink
+                to={l.to}
+                key={l.to}
+                activeClassName="active"
+                isActive={(_, location) =>
+                  location.pathname === l.to ||
+                  (l.to === "/support" && location.pathname === "/matching")
+                }
+              >
                 <IonIcon icon={l.icon} />
-                <span>{l.label}</span>
+                <span>{l.mobileLabel}</span>
               </NavLink>
             ))}
           </nav>
