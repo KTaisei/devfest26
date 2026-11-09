@@ -454,6 +454,8 @@ export interface components {
       createdAt: string;
       /** Updatedat */
       updatedAt: string;
+      /** Expiresat */
+      expiresAt?: string | null;
       /**
        * Datastatus
        * @default simulation
