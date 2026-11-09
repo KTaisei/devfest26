@@ -988,6 +988,16 @@
             ],
             "title": "Expiresat"
           },
+          "meetingPoint": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MeetingPoint"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "dataStatus": {
             "type": "string",
             "const": "simulation",
@@ -1010,6 +1020,50 @@
           "updatedAt"
         ],
         "title": "MatchOutput"
+      },
+      "MeetingPoint": {
+        "properties": {
+          "nodeId": {
+            "type": "string",
+            "title": "Nodeid"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "latitude": {
+            "type": "number",
+            "title": "Latitude"
+          },
+          "longitude": {
+            "type": "number",
+            "title": "Longitude"
+          },
+          "helperSeconds": {
+            "type": "integer",
+            "title": "Helperseconds"
+          },
+          "requesterSeconds": {
+            "type": "integer",
+            "title": "Requesterseconds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "nodeId",
+          "latitude",
+          "longitude",
+          "helperSeconds",
+          "requesterSeconds"
+        ],
+        "title": "MeetingPoint"
       },
       "Profile": {
         "properties": {
