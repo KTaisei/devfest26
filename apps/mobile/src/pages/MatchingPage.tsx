@@ -57,6 +57,24 @@ export function MatchCards({ helper = false }: { helper?: boolean }) {
             {supportLabel(m.supportType, en)} · {en ? "Approx." : "到着目安"}{" "}
             {Math.ceil(m.estimatedSeconds / 60)} {en ? "min" : "分"}
           </p>
+          {m.meetingPoint &&
+            ["accepted", "meeting", "assisting", "completed"].includes(
+              m.status,
+            ) && (
+              <p>
+                {en ? "Meeting point" : "合流地点"}：
+                {m.meetingPoint.name ?? m.meetingPoint.nodeId}
+                <span className="muted">
+                  {" "}
+                  ({en ? "helper" : "支援者"} {en ? "approx." : "約"}
+                  {Math.ceil(m.meetingPoint.helperSeconds / 60)}
+                  {en ? " min" : "分"} · {en ? "requester" : "依頼者"}{" "}
+                  {en ? "approx." : "約"}
+                  {Math.ceil(m.meetingPoint.requesterSeconds / 60)}
+                  {en ? " min" : "分"})
+                </span>
+              </p>
+            )}
           <p className="muted">
             {en
               ? "Anonymous participant · identity not verified"
