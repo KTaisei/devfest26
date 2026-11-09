@@ -1,5 +1,6 @@
 import os
 from functools import lru_cache
+from typing import Literal
 from urllib.parse import urlsplit
 from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -13,12 +14,19 @@ class Settings(BaseSettings):
     firebase_emulator_mode: bool = False
     firebase_auth_emulator_host: str = ""
     firestore_emulator_host: str = ""
+    gemini_backend: Literal["developer", "vertex"] = "developer"
+    gemini_project_id: str = ""
+    gemini_location: str = "global"
     gemini_api_key: str = ""
-    gemini_model: str = "gemini-2.5-flash"
+    gemini_model: str = "gemini-3.5-flash"
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
 
     @model_validator(mode="after")
-    def validate_emulators(self):
+    def validate_connections(self):
+        if self.gemini_backend == "vertex" and (
+            not self.gemini_project_id.strip() or not self.gemini_location.strip()
+        ):
+            raise ValueError("Vertex AI requires GEMINI_PROJECT_ID and GEMINI_LOCATION")
         hosts = (self.firebase_auth_emulator_host, self.firestore_emulator_host)
         if not self.firebase_emulator_mode:
             if any(hosts):

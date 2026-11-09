@@ -56,9 +56,26 @@ Google CloudでMaps JavaScript APIを有効にし、ブラウザ用APIキーを 
 
 ## Gemini
 
-`backend/.env` またはCloud RunのSecret Manager参照で `GEMINI_API_KEY` を設定します。モデルは `GEMINI_MODEL` で変更できます。フロントには渡しません。サーバー所有の模擬原文を翻訳するだけで、道路の安全性をAIに判定させません。生成文は「AI翻訳（要確認）」として原文を併記します。原文の意味が完全に保持されることは未保証なので、公開前に人によるレビューが必要です。
+チームのクラウド開発ではVertex AIを使用します。`backend/.env.cloud` に以下を設定し、`npm run dev:api:cloud` を再起動します。Mac・Windows共通です。設定例は `backend/.env.cloud.example` を参照してください。
 
-キーなし・タイムアウト・失敗時は固定文で動作し、providerにtemplate / template_fallbackを返します。支援要請文のAI解析は未実装です。
+```dotenv
+GEMINI_BACKEND=vertex
+GEMINI_PROJECT_ID=tasuku-77c63
+GEMINI_LOCATION=global
+GEMINI_MODEL=gemini-3.5-flash
+```
+
+Vertex AI APIの有効化と、対象プロジェクトの請求設定が必要です。ローカルは各開発者のADC（`gcloud auth application-default login`）、Cloud Runは付与されたサービスアカウントを使います。呼び出すアカウントにVertex AIの利用権限（例：`roles/aiplatform.user`）が必要です。権限付与・請求変更は管理者が行います。秘密鍵を共有しないでください。`global` はリージョン固定ではないため、データ所在地の要件がある場合は対応リージョンを別途確認します。
+
+VertexモードではAI Studioの `GEMINI_API_KEY` を渡しません。Cloudの利用料金が適用され、クレジット消費の可否・残高は請求画面で確認します。APIの成功だけではクレジットの適用を証明できません。
+
+AI Studio方式を使う場合は `GEMINI_BACKEND=developer` と `GEMINI_API_KEY` をサーバー側に設定します。こちらは別の請求経路です。キーはフロントに渡しません。未設定の通常デモは固定文を使います。接続先は明示的に選び、Vertex失敗時にAI Studioへ切り替えません。
+
+サーバー所有の模擬原文だけを翻訳し、道路の安全性をAIに判定させません。生成文は「AI翻訳（要確認）」として原文を併記します。原文の意味が完全に保持されることは未保証なので、公開前に人によるレビューが必要です。タイムアウト・権限・残高・モデル等のエラー時は固定文で動作し、providerにtemplate / template_fallbackを返します。支援要請文のAI解析は未実装です。
+
+404の場合はモデル名と利用可能な場所、403はAPI有効化とIAM、429は割当、認証エラーはADCを確認します。モデルは `GEMINI_MODEL` で変更できます。接続設定が不足したVertexモードは起動時に拒否します。
+
+[Google Gen AI SDK](https://github.com/googleapis/python-genai) / [Gemini 3.5 Flash](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/gemini/3-5-flash)
 
 ## Cloud Run / Firebase Hosting
 

@@ -67,3 +67,7 @@ waiting / offered / accepted / meeting / assisting → cancelled
 ## 現段階の限界
 
 データ走査は小規模デモ向けの全件scanです。利用者数の増加前に、地域・状態でのクエリとインデックス、レート制限、監査ログ、オファーキュー、全件走査を避ける期限クエリとジョブを追加します。APIのデータは模擬シナリオ専用で、実情報への切替機能はありません。通知や位置共有のバックグラウンド常駐はありません。
+
+## Geminiの接続境界
+
+`GEMINI_BACKEND` でdeveloper / vertexを明示選択します。Vertexは独立した `GEMINI_PROJECT_ID` と `GEMINI_LOCATION` を指定しADCで認証します。Firebaseのプロジェクトを暗黙に流用せず、AI Studioキーも渡しません。失敗時は定型文だけに切り替え、別の課金経路へ再送しません。API契約のproviderは従来どおりgemini / template / template_fallbackで、接続方式に依存しません。モデル・接続設定を変更したらAPIを再起動します。
