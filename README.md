@@ -96,13 +96,13 @@ npm run api:types
 
 [docs/SETUP.md](docs/SETUP.md) にFirebase、Google Maps、Gemini、Cloud Run、Capacitorの設定をまとめています。秘密鍵・`.env` はコミットしません。FirebaseのWeb設定・Google Mapsのブラウザキーは公開される前提なので、API制限・リファラー制限を設定してください。
 
-Firebaseは実プロジェクトでのAPI認証・プロフィール保存・復元と、ブラウザでの保存・再読み込みまで確認済みです。Google Maps・Geminiの実サービス接続、Cloud Runへのデプロイ、iOS/Android実機は未検証です。詳細は [検証記録](docs/TESTING.md) を参照してください。
+Firebaseは実プロジェクトでのAPI認証・プロフィール保存・復元と、ブラウザでの保存・再読み込みまで確認済みです。Google Mapsはローカルで背景地図・架空マーカー・模擬経路の表示を確認済みです。Geminiの実サービス接続、Cloud Runへのデプロイ、iOS/Android実機は未検証です。詳細は [検証記録](docs/TESTING.md) を参照してください。
 
 ## MVPの残作業
 
 この実装は仕様v2.0の土台と一連のデモフローです。すべての完成条件を検証済みという意味ではありません。
 
-- Google Maps/Geminiの設定と結合試験へ進む（キーは各自のGit管理外 `.env.cloud` に設定）
+- Geminiの設定と結合試験へ進む。Google Mapsはローカル表示確認済み（キーは各自のGit管理外 `.env.cloud` に設定）
 - Firebase実環境での同時承諾・ルール・TTL検証と共同開発者のIAM設定（基本の認証・保存は確認済み）
 - F-014の支援要請文からの支援内容抽出（現状は選択式）
 - 通知、複数候補への自動再依頼
