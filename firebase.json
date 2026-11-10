@@ -28,6 +28,10 @@
             "value": "nosniff"
           },
           {
+            "key": "Cache-Control",
+            "value": "no-cache"
+          },
+          {
             "key": "Referrer-Policy",
             "value": "strict-origin-when-cross-origin"
           },
