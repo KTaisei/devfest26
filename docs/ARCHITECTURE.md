@@ -96,4 +96,4 @@ FirestoreのSDK再試行が一時的な `Aborted` で尽きた場合だけ、新
 
 ## 共通GPSセッションと保存同意
 
-`LocationSession` はアプリ最上位で位置のwatchを1つ管理します。`foregroundLocation` は前景／背景・古いコールバック・GPS失効のライフサイクル、`locationConsent` はバージョン付き同意フラグの永続化、`useLocationSession` は現在のGPSと同意のメモリ状態、`LocationPreferences` は同意と状態の表示を担当します。地図・支援・音声案内はこの位置を共有し、各画面からwatchを増やしません。APIの同意検証・プロフィールの位置共有・業務操作は従来どおり独立しています。詳細は [LIVE_NAVIGATION.md](LIVE_NAVIGATION.md) を参照してください。
+`LocationSession` はアプリ最上位で位置のwatchを1つ管理します。`foregroundLocation` は前景／背景・古いコールバック・GPS失効のライフサイクル、`locationConsent` はバージョン付き同意フラグの永続化、`useLocationSession` は現在のGPSと同意のメモリ状態、`LocationPreferences` はプロフィールでだけ同意変更を扱います。タスク画面の `LocationStatus` は状態の表示とプロフィールへの案内に限定し、同意を変更しません。説明・出典の展開には `InfoDisclosure` を使います。地図・支援・音声案内はこの位置を共有し、各画面からwatchを増やしません。APIの同意検証・プロフィールの位置共有・業務操作は従来どおり独立しています。詳細は [LIVE_NAVIGATION.md](LIVE_NAVIGATION.md) を参照してください。

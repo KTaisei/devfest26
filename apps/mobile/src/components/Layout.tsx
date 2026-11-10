@@ -136,8 +136,8 @@ export function Layout({
               <span className="status-dot" />
               {dataMode === "real_preview"
                 ? en
-                  ? "TRAINING · Real road preview. Accessibility and disaster safety are unverified. Not for real evacuation."
-                  : "訓練・実道路の試験表示 · 通行可否・移動条件への対応は未確認です。実際の避難には使用できません。"
+                  ? "TRAINING · Real data trial · Not for real evacuation."
+                  : "訓練・実データ試験 / 実際の避難には使用できません。"
                 : en
                   ? "SIMULATION · All places and roads are fictional. Not for real evacuation."
                   : "訓練・シミュレーション中 · 避難場所・道路は架空です。実際の避難には使用できません。"}
@@ -145,9 +145,7 @@ export function Layout({
             <div className="page-body">
               <div className="page-heading">
                 <div>
-                  <span className="eyebrow">
-                    {eyebrow || "STAY CONNECTED. STAY INFORMED."}
-                  </span>
+                  {eyebrow && <span className="eyebrow">{eyebrow}</span>}
                   <h1>{title}</h1>
                 </div>
                 <span className="area-tag">

@@ -1,3 +1,4 @@
+import { InfoDisclosure } from "./InfoDisclosure";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { IonButton } from "@ionic/react";
@@ -259,17 +260,24 @@ export function TurnByTurnNavigator({
             : "GPSの更新・精度を確認中…";
   return (
     <section className="navigation-start">
-      <h3>{en ? "In-app voice navigation" : "アプリ内の音声付き経路案内"}</h3>
-      <p>
-        {en
-          ? "Uses saved GPS/Google consent. Start enables browser voice. Navigation stops in the background; GPS resumes automatically when you return."
-          : "保存したGPS・Google送信の同意を利用します。開始するとブラウザ音声を有効にします。背景では案内を停止し、戻るとGPS取得は自動再開します。"}
-      </p>
+      <h3>{en ? "In-app voice navigation" : "音声で道案内"}</h3>
       <p className="muted">
         {en
-          ? "Training only. GPS/voice may be delayed. Ordinary walking routes do not verify disaster safety or accessibility."
-          : "訓練・試験案内です。GPS・音声は遅れる場合があります。通常徒歩経路であり、被災状況や移動条件への対応は未確認です。"}
+          ? "Foreground only · Ordinary walking route, safety unverified."
+          : "表示中のみ案内 · 通常の徒歩経路・安全性は未確認"}
       </p>
+      <InfoDisclosure title={en ? "Guidance details" : "案内について"}>
+        <p>
+          {en
+            ? "Uses saved GPS/Google consent. Start enables browser voice. Navigation stops in the background; GPS resumes automatically when you return."
+            : "保存したGPS・Google送信の同意を利用します。開始するとブラウザ音声を有効にします。背景では案内を停止し、戻るとGPS取得は自動再開します。"}
+        </p>
+        <p className="muted">
+          {en
+            ? "Training only. GPS/voice may be delayed. Ordinary walking routes do not verify disaster safety or accessibility."
+            : "訓練・試験案内です。GPS・音声は遅れる場合があります。通常徒歩経路であり、被災状況や移動条件への対応は未確認です。"}
+        </p>
+      </InfoDisclosure>
       {!speechAvailable && (
         <p role="status">
           {en
@@ -288,7 +296,7 @@ export function TurnByTurnNavigator({
           setRunning(true);
         }}
       >
-        {en ? "Start GPS & voice guidance" : "GPS・音声案内を開始"}
+        {en ? "Start GPS & voice guidance" : "案内を開始"}
       </IonButton>
       {message && <p role="status">{message}</p>}
       {status === "arrived" && !running && <p role="status">{instruction}</p>}

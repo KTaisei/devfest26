@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { IonButton, IonSelect, IonSelectOption } from "@ionic/react";
+import { IonButton } from "@ionic/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "react-router-dom";
 import { TurnByTurnNavigator } from "../components/TurnByTurnNavigator";
@@ -7,7 +7,8 @@ import { DecisionNotice } from "../components/DecisionNotice";
 import { Layout, ErrorNotice } from "../components/Layout";
 import { RoadPreviewMap } from "../components/RoadPreviewMap";
 import { useLocationSession } from "../stores/useLocationSession";
-import { LocationPreferences } from "../components/LocationPreferences";
+import { LocationStatus } from "../components/LocationStatus";
+import { InfoDisclosure } from "../components/InfoDisclosure";
 import { realData } from "../services/realData";
 import { useAppStore } from "../stores/useAppStore";
 import { supportLabel } from "./SupportPage";
@@ -190,34 +191,26 @@ export function AssistancePage({ helper = false }: { helper?: boolean }) {
         helper
           ? en
             ? "Nearby assistance"
-            : "近くの支援に協力"
+            : "近くの支援"
           : en
             ? "Request nearby assistance"
-            : "近くの人に支援を依頼"
+            : "支援を依頼"
       }
       dataMode="real_preview"
     >
-      <div className="notice">
-        {en
-          ? "Real-position trial. Only people who explicitly request support are discoverable; the app does not infer who needs help. Use emergency services for rescue. Road damage and accessibility are unverified."
-          : "実位置を使う訓練・試験機能です。本人が支援を依頼した場合だけ検索対象になります。アプリが支援の必要性を推測することはありません。救助が必要な場合は119番へ。道路の被災・移動条件への対応は未確認です。"}
-      </div>
-      {!profile?.locationSharingEnabled && (
-        <p className="notice">
-          {en
-            ? "Enable location sharing in your profile. Volunteers also need availability and support capabilities."
-            : "プロフィールで位置共有を有効にしてください。支援者は受付状態と対応できる支援内容も設定してください。"}{" "}
-          <IonButton routerLink="/profile">
-            {en ? "Profile" : "設定する"}
-          </IonButton>
-        </p>
-      )}
-      <LocationPreferences en={en} />
+      <LocationStatus
+        en={en}
+        assistance
+        profileReady={Boolean(
+          profile?.locationSharingEnabled &&
+          (!helper || profile?.isAvailableToHelp),
+        )}
+      />
       <ErrorNotice error={mine.error} />
       <ErrorNotice error={consent ? positionError : undefined} />
       {lastStatus && <p role="status">{lastStatus}</p>}
       {current ? (
-        <section className="form-card">
+        <section className="form-card assistance-card">
           <h2>{statusLabel(current.status, en)}</h2>
           <p>
             {supportLabel(current.supportType, en)} ·{" "}
@@ -242,11 +235,17 @@ export function AssistancePage({ helper = false }: { helper?: boolean }) {
                 }
                 en={en}
               />
-              <p>
-                {en
-                  ? "Nearby public meeting candidates are checked with both walking approaches. With both consents, Gemini compares aggregate travel times; otherwise fixed rules select the point. It is not a verified entrance or a safest/shortest evacuation route."
-                  : "周辺の公開候補について双方の通常徒歩経路を確認しています。双方が同意した場合はGeminiが匿名の所要時間で比較し、同意がない場合は固定ルールで選びます。入口や最短・安全な避難経路を保証するものではありません。"}
-              </p>
+              <InfoDisclosure
+                title={
+                  en ? "How meeting points are chosen" : "合流地点の選び方"
+                }
+              >
+                <p>
+                  {en
+                    ? "Nearby public meeting candidates are checked with both walking approaches. With both consents, Gemini compares aggregate travel times; otherwise fixed rules select the point. It is not a verified entrance or a safest/shortest evacuation route."
+                    : "周辺の公開候補について双方の通常徒歩経路を確認しています。双方が同意した場合はGeminiが匿名の所要時間で比較し、同意がない場合は固定ルールで選びます。入口や最短・安全な避難経路を保証するものではありません。"}
+                </p>
+              </InfoDisclosure>
               <a
                 href="https://maps.gsi.go.jp/development/ichiran.html#skhb"
                 target="_blank"
@@ -258,9 +257,7 @@ export function AssistancePage({ helper = false }: { helper?: boolean }) {
                 disabled={!ready || directions.isPending}
                 onClick={() => directions.mutate()}
               >
-                {en
-                  ? "Show my route to meeting"
-                  : "自分の現在地から合流地点への道順"}
+                {en ? "Route to meeting" : "合流地点へ案内"}
               </IonButton>
               <ErrorNotice error={directions.error} />
               {ownRoute && (
@@ -283,11 +280,13 @@ export function AssistancePage({ helper = false }: { helper?: boolean }) {
                     {Math.ceil(ownRoute.personalEstimatedSeconds / 60)}
                     {en ? " min" : "分"}
                   </h3>
-                  {ownRoute.warnings.map((w, i) => (
-                    <p className="notice" key={i}>
-                      {w}
-                    </p>
-                  ))}
+                  <InfoDisclosure title={en ? "Route notes" : "経路の注意事項"}>
+                    {ownRoute.warnings.map((w, i) => (
+                      <p className="notice" key={i}>
+                        {w}
+                      </p>
+                    ))}
+                  </InfoDisclosure>
                   <ol>
                     {ownRoute.steps.map((s, i) => (
                       <li key={i}>
@@ -306,21 +305,19 @@ export function AssistancePage({ helper = false }: { helper?: boolean }) {
               </p>
               {current.status === "accepted" && (
                 <>
-                  <label className="navigation-consent">
-                    <input
-                      type="checkbox"
-                      checked={metConfirmed}
-                      onChange={(e) => setMetConfirmed(e.target.checked)}
-                    />
-                    {en
-                      ? "I have met the other person at this site. The confirmation uses fresh automatically updated GPS."
-                      : "この地点で実際に相手と会えたことを確認しました。確認には自動更新した新しいGPSを使用します。"}
-                  </label>
+                  <button
+                    className="meeting-confirm"
+                    aria-pressed={metConfirmed}
+                    onClick={() => setMetConfirmed(!metConfirmed)}
+                  >
+                    <span aria-hidden="true">{metConfirmed ? "✓" : "○"}</span>{" "}
+                    {en ? "I met the other person" : "相手と会えました"}
+                  </button>
                   <IonButton
                     disabled={!metConfirmed || !ready || progress.isPending}
                     onClick={() => progress.mutate("arrive")}
                   >
-                    {en ? "Confirm meeting" : "合流を確認"}
+                    {en ? "Send confirmation" : "合流確認を送信"}
                   </IonButton>
                 </>
               )}
@@ -334,11 +331,13 @@ export function AssistancePage({ helper = false }: { helper?: boolean }) {
               )}
             </>
           )}
-          {current.warnings.map((w, i) => (
-            <p className="muted" key={i}>
-              {w}
-            </p>
-          ))}
+          <InfoDisclosure title={en ? "Assistance notes" : "支援の注意事項"}>
+            {current.warnings.map((w, i) => (
+              <p className="muted" key={i}>
+                {w}
+              </p>
+            ))}
+          </InfoDisclosure>
           <IonButton
             fill="outline"
             color="danger"
@@ -350,40 +349,43 @@ export function AssistancePage({ helper = false }: { helper?: boolean }) {
           <ErrorNotice error={progress.error} />
         </section>
       ) : (
-        <section className="form-card">
+        <section className="form-card assistance-card">
           {helper ? (
             <>
-              <h2>
-                {en
-                  ? "Opt-in requests within 2 km"
-                  : "2km以内で支援を希望する人"}
-              </h2>
-              <p>
-                {en
-                  ? "Only requests matching your capabilities/language are listed. Exact positions are private; acceptance shares a public meeting point."
-                  : "対応能力・言語が合う依頼を表示します。正確な位置は非公開です。承諾すると共通の公開合流地点を表示します。"}
-              </p>
+              <h2>{en ? "Opt-in requests within 2 km" : "近くの支援依頼"}</h2>
+              <InfoDisclosure
+                title={en ? "Who appears here" : "表示される依頼について"}
+              >
+                <p>
+                  {en
+                    ? "Only requests matching your capabilities/language are listed. Exact positions are private; acceptance shares a public meeting point."
+                    : "対応能力・言語が合う依頼を表示します。正確な位置は非公開です。承諾すると共通の公開合流地点を表示します。"}
+                </p>
+              </InfoDisclosure>
               <p role="status">
-                {!ready
+                {!ready || !profile?.isAvailableToHelp
                   ? en
-                    ? "Agree and acquire fresh GPS to start automatic updates."
-                    : "GPS取得と同意後、自動で更新します。"
+                    ? "Waiting for location and profile setup."
+                    : "設定後に自動で検索します。"
                   : search.isFetching && !searched
                     ? en
                       ? "Checking nearby requests…"
                       : "周辺の依頼を取得中…"
                     : en
-                      ? "Automatically updates every 5 seconds. No page reload needed."
-                      : "5秒ごとに自動更新中。ページの再読み込みは不要です。"}
+                      ? "Auto-updating · within 2 km"
+                      : "自動更新中 · 2km以内"}
               </p>
               <ErrorNotice error={search.error} />
-              {searched && !candidates.length && (
-                <p>
-                  {en
-                    ? "No matching opt-in requests nearby."
-                    : "近くに条件の合う支援依頼はありません。"}
-                </p>
-              )}
+              {ready &&
+                profile?.isAvailableToHelp &&
+                searched &&
+                !candidates.length && (
+                  <p>
+                    {en
+                      ? "No matching opt-in requests nearby."
+                      : "近くに条件の合う支援依頼はありません。"}
+                  </p>
+                )}
               {candidates.map((c) => (
                 <div className="match-card" key={c.id}>
                   <strong>{supportLabel(c.supportType, en)}</strong>
@@ -403,7 +405,7 @@ export function AssistancePage({ helper = false }: { helper?: boolean }) {
                         : "実道路で合流地点を確認中…"
                       : en
                         ? "Accept & choose meeting point"
-                        : "承諾して合流地点を決める"}
+                        : "支援を引き受ける"}
                   </IonButton>
                 </div>
               ))}
@@ -412,10 +414,10 @@ export function AssistancePage({ helper = false }: { helper?: boolean }) {
           ) : (
             <>
               <h2>{en ? "What support do you need?" : "必要な支援を選ぶ"}</h2>
-              <IonSelect
+              <div
+                className="support-choice-grid"
+                role="group"
                 aria-label={en ? "Support type" : "支援内容"}
-                value={supportType}
-                onIonChange={(e) => setSupportType(e.detail.value)}
               >
                 {(
                   [
@@ -424,30 +426,46 @@ export function AssistancePage({ helper = false }: { helper?: boolean }) {
                     "information",
                     "walking_companion",
                   ] as const
-                ).map((t) => (
-                  <IonSelectOption key={t} value={t}>
-                    {supportLabel(t, en)}
-                  </IonSelectOption>
+                ).map((type, index) => (
+                  <button
+                    key={type}
+                    aria-pressed={supportType === type}
+                    onClick={() => setSupportType(type)}
+                  >
+                    <span aria-hidden="true">
+                      {["↗", "Aa", "i", "↔"][index]}
+                    </span>
+                    {supportLabel(type, en)}
+                  </button>
                 ))}
-              </IonSelect>
-              <p>
-                {en
-                  ? "A volunteer nearby can accept. The app then selects a public meeting site accessible by ordinary walking routes from both locations. It does not send anyone to your private GPS point."
-                  : "近くの支援者が承諾すると、双方から通常の徒歩経路がある公開合流地点を選びます。相手があなたのGPS地点へ直接向かう方式ではありません。"}
-              </p>
+              </div>
+              <InfoDisclosure
+                title={en ? "What happens next" : "依頼した後の流れ"}
+              >
+                <p>
+                  {en
+                    ? "A volunteer nearby can accept. The app then selects a public meeting site accessible by ordinary walking routes from both locations. It does not send anyone to your private GPS point."
+                    : "近くの支援者が承諾すると、双方から通常の徒歩経路がある公開合流地点を選びます。相手があなたのGPS地点へ直接向かう方式ではありません。"}
+                </p>
+              </InfoDisclosure>
               <IonButton
                 disabled={!ready || create.isPending}
                 onClick={() => create.mutate()}
               >
-                {en
-                  ? "Request support with this GPS"
-                  : "このGPS現在地で支援を依頼"}
+                {en ? "Request support" : "この内容で支援を依頼"}
               </IonButton>
               <ErrorNotice error={create.error} />
             </>
           )}
         </section>
       )}
+      <InfoDisclosure title={en ? "About this trial" : "この試験機能について"}>
+        <p>
+          {en
+            ? "Only people who request support appear here. Exact GPS is private. Road damage and accessibility are unverified. This is not a rescue service."
+            : "本人が支援を依頼した場合だけ表示します。正確なGPSは非公開です。被災状況・段差などは未確認で、救助サービスではありません。"}
+        </p>
+      </InfoDisclosure>
     </Layout>
   );
 }

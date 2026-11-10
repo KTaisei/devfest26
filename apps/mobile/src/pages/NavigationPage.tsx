@@ -8,7 +8,8 @@ import { EvacuationAdvisor } from "../components/EvacuationAdvisor";
 import { RoadPreviewMap } from "../components/RoadPreviewMap";
 import { realData } from "../services/realData";
 import { useLocationSession } from "../stores/useLocationSession";
-import { LocationPreferences } from "../components/LocationPreferences";
+import { LocationStatus } from "../components/LocationStatus";
+import { InfoDisclosure } from "../components/InfoDisclosure";
 import { meters } from "../navigation/progress";
 import { useRealEnvironment } from "../features/useRealEnvironment";
 import { useAppStore } from "../stores/useAppStore";
@@ -39,7 +40,6 @@ export function NavigationPage() {
   const en = language === "en";
   // Never read the simulation's default Fukuyama coordinate as this user's GPS.
   const [origin, setOrigin] = useState<Location>();
-  const [originTime, setOriginTime] = useState<Date>();
   const [destination, setDestination] = useState<Location>();
   const [destinationName, setDestinationName] = useState("");
   const { consent: permissions, fix } = useLocationSession();
@@ -61,7 +61,6 @@ export function NavigationPage() {
   useEffect(() => {
     if (!permissions.services) {
       setOrigin(undefined);
-      setOriginTime(undefined);
       setAreaOrigin(undefined);
       return;
     }
@@ -73,7 +72,6 @@ export function NavigationPage() {
       setAreaOrigin(undefined);
       return;
     }
-    setOriginTime(new Date(fix.timestamp));
     // Keep the planned route stable. The live marker/watch continues independently.
     setOrigin((previous) => previous || fix);
     setAreaOrigin((previous) =>
@@ -112,7 +110,6 @@ export function NavigationPage() {
   );
   function setStart(point: Location, source: "gps" | "manual") {
     setOrigin(point);
-    setOriginTime(new Date());
     setOriginSource(source);
   }
   const signature = JSON.stringify({ origin, destination, profile, language });
@@ -240,50 +237,19 @@ export function NavigationPage() {
                 ? "Show controls ↑"
                 : "操作パネルを開く ↑"}
           </button>
-          <div className="map-location-row">
-            <div>
-              <strong>
-                {origin
-                  ? originSource === "gps"
-                    ? en
-                      ? liveGPS
-                        ? "GPS auto-updating"
-                        : "Waiting for GPS"
-                      : liveGPS
-                        ? "GPS自動更新中"
-                        : "GPS受信待ち"
-                    : en
-                      ? "Manually selected start"
-                      : "手動で指定した出発地"
-                  : en
-                    ? "Start with your current location"
-                    : "あなたの現在地から始める"}
-              </strong>
-              <small>
-                {originTime
-                  ? `${originTime.toLocaleTimeString(language)} · ${en ? "Automatic GPS updates" : "GPS自動更新"}`
-                  : en
-                    ? "No default or fictional location"
-                    : "架空の現在地は設定していません"}
-              </small>
+          <LocationStatus en={en} />
+          {originSource === "manual" && (
+            <div className="manual-origin-status">
+              <span>{en ? "Manual start" : "手動の出発地"}</span>
+              <button
+                onClick={() => {
+                  setOriginSource("gps");
+                  setOrigin(fix);
+                }}
+              >
+                {en ? "Use GPS" : "現在地に戻す"}
+              </button>
             </div>
-            <IonButton
-              size="small"
-              onClick={() => {
-                setOriginSource("gps");
-                setOrigin(fix);
-                setExpanded(true);
-              }}
-            >
-              {en ? "GPS settings" : "GPS・同意設定"}
-            </IonButton>
-          </div>
-          {!expanded && (
-            <p className="map-compact-privacy">
-              {en
-                ? "GPS is sent to TASUKU, Google and GSI only after you agree. No sharing with other users."
-                : "同意後に現在地をTASUKU・Google・国土地理院へ送信します。他の利用者には共有しません。"}
-            </p>
           )}
           {result && !expanded && (
             <button
@@ -303,15 +269,6 @@ export function NavigationPage() {
           )}
           {expanded && (
             <div className="map-sheet-content">
-              <LocationPreferences en={en} />
-              {areaOrigin && usable && (
-                <EvacuationAdvisor origin={areaOrigin} en={en} />
-              )}
-              <p className="map-privacy">
-                {en
-                  ? "GPS updates automatically after saved consent. P2PQuake receives no GPS. You can revoke processing consent here or in Profile."
-                  : "保存した同意に基づきGPSを自動更新します。P2P地震情報へGPSは送りません。この設定またはプロフィールで同意を撤回できます。"}
-              </p>
               <div
                 className="map-tabs"
                 role="tablist"
@@ -319,8 +276,8 @@ export function NavigationPage() {
               >
                 {(
                   [
-                    ["sites", en ? "Nearby sites" : "近くの避難場所"],
-                    ["earthquakes", en ? "Local quakes" : "地域の地震"],
+                    ["sites", en ? "Nearby sites" : "避難場所"],
+                    ["earthquakes", en ? "Local quakes" : "地震情報"],
                     ["route", en ? "Directions" : "道順"],
                   ] as const
                 ).map(([key, label]) => (
@@ -334,25 +291,22 @@ export function NavigationPage() {
                   </button>
                 ))}
               </div>
-              {!origin && (
-                <p className="notice">
-                  {en
-                    ? "Acquire your location to load actual nearby sites and your area's earthquake information."
-                    : "現在地を取得すると、周辺の実在する避難場所と対象地域の地震情報を読み込みます。"}
-                </p>
-              )}
               {tab === "sites" && (
                 <>
                   <p>
                     {en
-                      ? "Earthquake-designated emergency sites within 5 km · straight-line distance"
-                      : "周辺5kmの地震対応・指定緊急避難場所 / 距離は直線距離"}
+                      ? "Earthquake sites · within 5 km"
+                      : "地震対応の指定緊急避難場所 · 5km以内"}
                   </p>
-                  <p className="muted">
-                    {en
-                      ? "An emergency site differs from an accommodation shelter. Data may be missing or out of date; check the municipality. Opening, capacity, entrances, accessibility and disaster road conditions are unverified."
-                      : "指定緊急避難場所と滞在する指定避難所は異なります。未掲載・古い情報があるため自治体へ確認してください。開設・定員・入口・段差・道路の被災状況は未確認です。"}
-                  </p>
+                  <InfoDisclosure
+                    title={en ? "About these sites" : "避難場所について"}
+                  >
+                    <p className="muted">
+                      {en
+                        ? "An emergency site differs from an accommodation shelter. Data may be missing or out of date; check the municipality. Opening, capacity, entrances, accessibility and disaster road conditions are unverified."
+                        : "指定緊急避難場所と滞在する指定避難所は異なります。未掲載・古い情報があるため自治体へ確認してください。開設・定員・入口・段差・道路の被災状況は未確認です。"}
+                    </p>
+                  </InfoDisclosure>
                   {origin && shelters.isPending && (
                     <p role="status">
                       {en
@@ -403,8 +357,8 @@ export function NavigationPage() {
                         ? "Comparing routes…"
                         : "徒歩経路を比較中…"
                       : en
-                        ? "Compare up to 3 nearby walking routes"
-                        : "近くの3候補の徒歩経路を比較"}
+                        ? "Compare nearby routes"
+                        : "近くの経路を比較"}
                   </IonButton>
                   <ErrorNotice error={compare.error} />
                   <div className="real-site-list">
@@ -425,9 +379,7 @@ export function NavigationPage() {
                     target="_blank"
                     rel="noreferrer"
                   >
-                    {en
-                      ? "Source: GSI designated emergency evacuation sites ↗"
-                      : "出典：国土地理院・指定緊急避難場所 ↗"}
+                    {en ? "Source: GSI ↗" : "出典：国土地理院 ↗"}
                   </a>
                   {shelters.data?.fetchedAt && (
                     <small className="source-time">
@@ -445,15 +397,21 @@ export function NavigationPage() {
                     {earthquake.data?.area ||
                       (en ? "Area not determined" : "対象地域は未判定")}
                   </strong>
-                  <p>
-                    {en
-                      ? "P2PQuake (JMA information) · refreshes every 15 seconds while visible. Only reports affecting your seismic area within the last 10 minutes are shown; distant epicentres may still affect this area."
-                      : "P2P地震情報（気象庁発表） / 表示中は15秒ごとに更新。直近10分のうち、現在地の震度・警報対象地域に該当する情報だけ表示します。震源が遠くても対象地域なら表示します。"}
-                  </p>
+                  <InfoDisclosure
+                    title={
+                      en ? "Source & update interval" : "情報源・更新について"
+                    }
+                  >
+                    <p>
+                      {en
+                        ? "P2PQuake (JMA information) · refreshes every 15 seconds while visible. Only reports affecting your seismic area within the last 10 minutes are shown; distant epicentres may still affect this area."
+                        : "P2P地震情報（気象庁発表） / 表示中は15秒ごとに更新。直近10分のうち、現在地の震度・警報対象地域に該当する情報だけ表示します。震源が遠くても対象地域なら表示します。"}
+                    </p>
+                  </InfoDisclosure>
                   <p className="notice">
                     {en
-                      ? "Trial display. Delivery can be delayed, interrupted or missing. This does not guarantee an early warning. Mobile background operation and push notifications are not available."
-                      : "試験表示です。配信の遅延・停止・欠落があり、緊急地震速報の受信を保証しません。スマホのバックグラウンド受信・プッシュ通知は未対応です。"}
+                      ? "Trial display · delayed or missing reports possible. No background alerts."
+                      : "試験表示・遅延や欠落があります。背景通知は未対応です。"}
                   </p>
                   {origin && earthquake.isPending && (
                     <p role="status">
@@ -535,14 +493,18 @@ export function NavigationPage() {
                   </strong>
                   <p>
                     {en
-                      ? "Tap a site marker or choose a destination on the map."
-                      : "避難場所のマーカー、一覧、または地図上をタップして目的地を選べます。"}
+                      ? "Tap a destination on the map."
+                      : "地図や避難場所から目的地を選択。"}
                   </p>
-                  <p className="notice">
-                    {en
-                      ? "Ordinary walking routes. Your profile adjusts language and estimated time. Stairs, wheelchair access, disaster damage and the safest/shortest evacuation route are NOT verified."
-                      : "通常の徒歩経路です。プロフィールの言語・移動速度で案内と時間を調整します。階段・車いす対応・被災状況は未確認のため「最短かつ安全な避難経路」とは判定していません。"}
-                  </p>
+                  <InfoDisclosure
+                    title={en ? "Route limitations" : "経路について"}
+                  >
+                    <p className="notice">
+                      {en
+                        ? "Ordinary walking routes. Your profile adjusts language and estimated time. Stairs, wheelchair access, disaster damage and the safest/shortest evacuation route are NOT verified."
+                        : "通常の徒歩経路です。プロフィールの言語・移動速度で案内と時間を調整します。階段・車いす対応・被災状況は未確認のため「最短かつ安全な避難経路」とは判定していません。"}
+                    </p>
+                  </InfoDisclosure>
                   {!profile && (
                     <IonButton routerLink="/profile">
                       {en ? "Set up profile" : "プロフィールを登録"}
@@ -569,7 +531,7 @@ export function NavigationPage() {
                         : "計算中…"
                       : en
                         ? "Show walking directions"
-                        : "徒歩の道順を表示"}
+                        : "ルートを表示"}
                   </IonButton>
                   <ErrorNotice error={route.error} />
                   {result && (
@@ -600,16 +562,26 @@ export function NavigationPage() {
                         {Math.ceil(result.providerSeconds / 60)}
                         {en ? " min" : "分"}
                       </small>
-                      {result.warnings.map((w, i) => (
-                        <p className="notice" key={i}>
-                          {w}
+                      <InfoDisclosure
+                        title={en ? "Route notes" : "経路の注意事項"}
+                      >
+                        {result.warnings.map((w, i) => (
+                          <p className="notice" key={i}>
+                            {w}
+                          </p>
+                        ))}
+                      </InfoDisclosure>
+                      <InfoDisclosure
+                        title={
+                          en ? "About Street View" : "ストリートビューについて"
+                        }
+                      >
+                        <p>
+                          {en
+                            ? "Street View is past imagery, not live conditions or AR. Stop before viewing; Google receives the viewpoint."
+                            : "ストリートビューは過去の画像で、現在の状況やARではありません。立ち止まって確認してください。開くとGoogleへ地点を送信します。"}
                         </p>
-                      ))}
-                      <p>
-                        {en
-                          ? "Street View is past imagery, not live conditions or AR. Stop before viewing; Google receives the viewpoint."
-                          : "ストリートビューは過去の画像で、現在の状況やARではありません。立ち止まって確認してください。開くとGoogleへ地点を送信します。"}
-                      </p>
+                      </InfoDisclosure>
                       <ol className="walking-steps">
                         {result.steps.map((s, i) => (
                           <li key={i}>
@@ -630,69 +602,74 @@ export function NavigationPage() {
                   )}
                 </>
               )}
-              <details className="manual-start">
-                <summary>
+              {areaOrigin && usable && (
+                <EvacuationAdvisor origin={areaOrigin} en={en} />
+              )}
+              <InfoDisclosure title={en ? "More options" : "その他の操作"}>
+                <details className="manual-start">
+                  <summary>
+                    {en
+                      ? "Plan from a manually entered real point"
+                      : "実在する地点を手動で指定して試す"}
+                  </summary>
+                  <p>
+                    {en
+                      ? "This is not your GPS position. The selected point uses the service consent saved in Profile."
+                      : "GPS現在地とは別の指定です。プロフィールで同意した外部サービスへ送信します。"}
+                  </p>
+                  {(["latitude", "longitude"] as const).map((axis) => (
+                    <label key={axis}>
+                      {axis === "latitude"
+                        ? en
+                          ? "Latitude"
+                          : "緯度"
+                        : en
+                          ? "Longitude"
+                          : "経度"}
+                      <input
+                        aria-label={`origin ${axis}`}
+                        type="number"
+                        step="any"
+                        value={manual[axis]}
+                        onChange={(e) =>
+                          setManual({ ...manual, [axis]: e.target.value })
+                        }
+                      />
+                    </label>
+                  ))}
+                  <IonButton
+                    fill="outline"
+                    disabled={
+                      !consent ||
+                      manual.latitude === "" ||
+                      manual.longitude === "" ||
+                      !Number.isFinite(Number(manual.latitude)) ||
+                      !Number.isFinite(Number(manual.longitude)) ||
+                      Math.abs(Number(manual.latitude)) > 90 ||
+                      Math.abs(Number(manual.longitude)) > 180
+                    }
+                    onClick={() =>
+                      setStart(
+                        {
+                          latitude: Number(manual.latitude),
+                          longitude: Number(manual.longitude),
+                        },
+                        "manual",
+                      )
+                    }
+                  >
+                    {en ? "Use this start" : "この出発地を使用"}
+                  </IonButton>
+                </details>
+                <p className="muted">
                   {en
-                    ? "Plan from a manually entered real point"
-                    : "実在する地点を手動で指定して試す"}
-                </summary>
-                <p>
-                  {en
-                    ? "This is not your GPS position. The selected point is sent to the same services listed above."
-                    : "GPS現在地としては扱いません。指定地点は上記と同じサービスへ送信します。"}
+                    ? "Use Request / Help below to try real-GPS assistance. The earlier fictional demo is separate."
+                    : "下の「支援依頼」「支援協力」から実GPSで支援を試せます。過去の架空データのデモは別画面です。"}{" "}
+                  <Link to="/simulation">
+                    {en ? "Open simulation" : "訓練用画面"}
+                  </Link>
                 </p>
-                {(["latitude", "longitude"] as const).map((axis) => (
-                  <label key={axis}>
-                    {axis === "latitude"
-                      ? en
-                        ? "Latitude"
-                        : "緯度"
-                      : en
-                        ? "Longitude"
-                        : "経度"}
-                    <input
-                      aria-label={`origin ${axis}`}
-                      type="number"
-                      step="any"
-                      value={manual[axis]}
-                      onChange={(e) =>
-                        setManual({ ...manual, [axis]: e.target.value })
-                      }
-                    />
-                  </label>
-                ))}
-                <IonButton
-                  fill="outline"
-                  disabled={
-                    !consent ||
-                    manual.latitude === "" ||
-                    manual.longitude === "" ||
-                    !Number.isFinite(Number(manual.latitude)) ||
-                    !Number.isFinite(Number(manual.longitude)) ||
-                    Math.abs(Number(manual.latitude)) > 90 ||
-                    Math.abs(Number(manual.longitude)) > 180
-                  }
-                  onClick={() =>
-                    setStart(
-                      {
-                        latitude: Number(manual.latitude),
-                        longitude: Number(manual.longitude),
-                      },
-                      "manual",
-                    )
-                  }
-                >
-                  {en ? "Agree & use this start" : "同意してこの出発地を使用"}
-                </IonButton>
-              </details>
-              <p className="muted">
-                {en
-                  ? "Use Request / Help below to try real-GPS assistance. The earlier fictional demo is separate."
-                  : "下の「支援依頼」「支援協力」から実GPSで支援を試せます。過去の架空データのデモは別画面です。"}{" "}
-                <Link to="/simulation">
-                  {en ? "Open simulation" : "訓練用画面"}
-                </Link>
-              </p>
+              </InfoDisclosure>
             </div>
           )}
         </section>

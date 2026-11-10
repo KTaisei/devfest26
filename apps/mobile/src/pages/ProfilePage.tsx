@@ -1,3 +1,4 @@
+import { InfoDisclosure } from "../components/InfoDisclosure";
 import { LocationPreferences } from "../components/LocationPreferences";
 import { useEffect, useState } from "react";
 import {
@@ -43,23 +44,24 @@ export function ProfilePage() {
     <Layout
       dataMode="real_preview"
       title={en ? "Your profile" : "プロフィール"}
-      eyebrow="YOUR PREFERENCES"
     >
       <LocationPreferences en={en} />
       <div className="form-card">
-        <p className="notice">
-          {en
-            ? "Real walking routes use language and a time estimate. Stair avoidance and wheelchair access are not verified."
-            : "実道路の案内には言語と移動時間の目安を反映します。階段回避・車いす対応の経路検証は未対応です。"}
-        </p>
-        <h2>
-          {en ? "Tell us what works for you." : "あなたに合った案内のために。"}
-        </h2>
-        <p>
-          {en
-            ? "No medical history or diagnosis is collected. Anonymous users are not identity-verified helpers."
-            : "障害名や医療情報は収集しません。匿名認証では支援者の本人確認は行われません。"}
-        </p>
+        <h2>{en ? "Your preferences" : "案内・支援の設定"}</h2>
+        <InfoDisclosure
+          title={en ? "About your profile" : "プロフィールについて"}
+        >
+          <p className="notice">
+            {en
+              ? "Real walking routes use language and a time estimate. Stair avoidance and wheelchair access are not verified."
+              : "実道路の案内には言語と移動時間の目安を反映します。階段回避・車いす対応の経路検証は未対応です。"}
+          </p>
+          <p>
+            {en
+              ? "No medical history or diagnosis is collected. Anonymous users are not identity-verified helpers."
+              : "障害名や医療情報は収集しません。匿名認証では支援者の本人確認は行われません。"}
+          </p>
+        </InfoDisclosure>
         <ErrorNotice error={query.error} />
         <ErrorNotice error={save.error} />
         <IonInput

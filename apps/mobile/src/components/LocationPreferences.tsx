@@ -1,3 +1,4 @@
+import { InfoDisclosure } from "./InfoDisclosure";
 import { useEffect, useState } from "react";
 import { IonButton } from "@ionic/react";
 import { useLocationSession } from "../stores/useLocationSession";
@@ -14,13 +15,11 @@ export function LocationPreferences({ en = false }: { en?: boolean }) {
       className="form-card location-preferences"
       aria-label={en ? "Location and consent settings" : "現在地・同意の設定"}
     >
-      <h2>
-        {en ? "Automatic GPS & saved consent" : "GPSの自動取得・同意設定"}
-      </h2>
-      <p>
+      <h2>{en ? "Location & privacy" : "現在地とプライバシー"}</h2>
+      <p className="muted">
         {en
-          ? "Preferences are saved in this browser. GPS updates automatically while the app is visible and resumes when you return. Closing or locking the app stops updates. Browser permission may be requested again by your OS. Revoke here anytime."
-          : "同意をこのブラウザに保存します。アプリ表示中はGPSを自動更新し、戻ると自動で再開します。閉じた時・画面ロック中の取得はできません。端末側の許可は再確認される場合があります。ここでいつでも撤回できます。"}
+          ? "Saved automatically on this browser. Change permissions here anytime."
+          : "このブラウザに自動保存。設定の変更はこの画面だけで行います。"}
       </p>
       <label className="navigation-consent">
         <input
@@ -28,9 +27,14 @@ export function LocationPreferences({ en = false }: { en?: boolean }) {
           checked={consent.services}
           onChange={(e) => setConsent("services", e.target.checked)}
         />
-        {en
-          ? "Allow continuous GPS and sending my location/destination to TASUKU, Google (maps, walking routes, comparisons and rerouting), and GSI (area and site lookup). GPS is kept in memory only; no other user receives it."
-          : "GPSの継続取得と、現在地・目的地をTASUKU・Google（地図、徒歩経路、候補比較、再計算）・国土地理院（地域・避難場所照会）へ送信することに同意します。GPSは端末内ではメモリだけに保持し、他の利用者へ渡しません。"}
+        <span>
+          <strong>{en ? "Location & routes" : "現在地・ルート"}</strong>
+          <small>
+            {en
+              ? "Allow foreground GPS and sending my location/destination to TASUKU, Google and GSI."
+              : "表示中のGPS取得と、現在地・目的地のTASUKU・Google・国土地理院への送信に同意します。"}
+          </small>
+        </span>
       </label>
       <label className="navigation-consent">
         <input
@@ -38,9 +42,14 @@ export function LocationPreferences({ en = false }: { en?: boolean }) {
           checked={consent.ai}
           onChange={(e) => setConsent("ai", e.target.checked)}
         />
-        {en
-          ? "Allow Gemini to receive reported conditions, notice availability/count, my assistance status and anonymous aggregate walking times. No GPS or identity is sent to Gemini. AI does not assess safety. Both parties must agree for meeting selection. Revocation applies to future actions; cancel a waiting request to revoke the consent already saved with it."
-          : "申告状況・地震情報の取得状態と件数・自分の支援状態・匿名の合計／最長徒歩時間をGeminiへ送信することに同意します。GeminiへGPS座標や識別情報は送りません。AIは安全性を判定しません。合流候補の比較には双方の同意が必要です。撤回は今後の操作に適用し、受付中の依頼の同意を取り消す場合は支援を中止してください。"}
+        <span>
+          <strong>{en ? "Gemini assistance" : "Geminiの判断補助"}</strong>
+          <small>
+            {en
+              ? "Allow anonymous conditions and walking times to Gemini. No GPS or identity."
+              : "匿名の状況・徒歩時間のGeminiへの送信に同意します。GPS・識別情報は含みません。"}
+          </small>
+        </span>
       </label>
       <label className="navigation-consent">
         <input
@@ -48,10 +57,41 @@ export function LocationPreferences({ en = false }: { en?: boolean }) {
           checked={consent.assistance}
           onChange={(e) => setConsent("assistance", e.target.checked)}
         />
-        {en
-          ? "Allow GPS for support discovery/matching and Google approaches. After I request support, TASUKU stores my position privately for up to 30 minutes, updating while waiting. Request/accept and profile sharing remain my choices."
-          : "GPSによる支援検索・マッチングとGoogleでの合流経路計算に同意します。自分で支援を依頼した後はTASUKUが位置を最大30分非公開で保持し、受付中は更新します。依頼・承諾・プロフィールの位置共有は別途自分で選びます。"}
+        <span>
+          <strong>{en ? "Nearby support" : "近くの支援"}</strong>
+          <small>
+            {en
+              ? "Allow location-based matching and Google routes. A request stores private GPS for up to 30 minutes."
+              : "現在地での支援検索・Googleでの合流経路計算に同意します。依頼後、TASUKUに位置を最大30分非公開で保存します。"}
+          </small>
+        </span>
       </label>
+      <InfoDisclosure
+        title={
+          en ? "Data use & permission details" : "送信内容・保存・権限について"
+        }
+      >
+        <p>
+          {en
+            ? "GPS updates while visible, pauses in the background, and resumes on return. Browser permissions may expire. Coordinates are never saved on this device."
+            : "GPSは表示中に自動更新し、背景で停止、戻ると再開します。ブラウザ側の許可は再確認される場合があります。端末に座標を保存しません。"}
+        </p>
+        <p>
+          {en
+            ? "Allow continuous GPS and sending my location/destination to TASUKU, Google (maps, walking routes, comparisons and rerouting), and GSI (area and site lookup). GPS is kept in memory only; no other user receives it."
+            : "GPSの継続取得と、現在地・目的地をTASUKU・Google（地図、徒歩経路、候補比較、再計算）・国土地理院（地域・避難場所照会）へ送信することに同意します。GPSは端末内ではメモリだけに保持し、他の利用者へ渡しません。"}
+        </p>
+        <p>
+          {en
+            ? "Allow Gemini to receive reported conditions, notice availability/count, my assistance status and anonymous aggregate walking times. No GPS or identity is sent to Gemini. AI does not assess safety. Both parties must agree for meeting selection. Revocation applies to future actions; cancel a waiting request to revoke the consent already saved with it."
+            : "申告状況・地震情報の取得状態と件数・自分の支援状態・匿名の合計／最長徒歩時間をGeminiへ送信することに同意します。GeminiへGPS座標や識別情報は送りません。AIは安全性を判定しません。合流候補の比較には双方の同意が必要です。撤回は今後の操作に適用し、受付中の依頼の同意を取り消す場合は支援を中止してください。"}
+        </p>
+        <p>
+          {en
+            ? "Allow GPS for support discovery/matching and Google approaches. After I request support, TASUKU stores my position privately for up to 30 minutes, updating while waiting. Request/accept and profile sharing remain my choices."
+            : "GPSによる支援検索・マッチングとGoogleでの合流経路計算に同意します。自分で支援を依頼した後はTASUKUが位置を最大30分非公開で保持し、受付中は更新します。依頼・承諾・プロフィールの位置共有は別途自分で選びます。"}
+        </p>
+      </InfoDisclosure>
       <p role="status">
         {!consent.services
           ? en

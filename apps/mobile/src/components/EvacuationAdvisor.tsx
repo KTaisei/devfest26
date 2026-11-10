@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { useLocationSession } from "../stores/useLocationSession";
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
@@ -36,30 +37,26 @@ export function EvacuationAdvisor({
       </summary>
       <p>
         {en
-          ? "Report what you can actually observe. AI does not determine safety or issue evacuation instructions."
-          : "自分で確認できた状況を選んでください。AIによる安全判定や避難指示ではありません。"}
+          ? "Select what you observe. AI does not assess safety."
+          : "確認できた状況を選択。AIは安全性を判定しません。"}
       </p>
-      <label>
-        <input
-          type="checkbox"
-          checked={shaking}
-          onChange={(e) => setShaking(e.target.checked)}
-        />
-        {en ? "Shaking now" : "現在、揺れを感じる"}
-      </label>
-      <label>
-        <input
-          type="checkbox"
-          checked={blocked}
-          onChange={(e) => setBlocked(e.target.checked)}
-        />
-        {en ? "Obstruction observed" : "通行障害を確認した"}
-      </label>
-      <p>
-        {en
-          ? "Gemini uses your saved consent in GPS settings / Profile."
-          : "Gemini利用はGPS・同意設定／プロフィールで保存した同意に基づきます。"}
-      </p>
+      <div className="observation-choices">
+        <button aria-pressed={shaking} onClick={() => setShaking(!shaking)}>
+          {en ? "Shaking now" : "揺れを感じる"}
+        </button>
+        <button aria-pressed={blocked} onClick={() => setBlocked(!blocked)}>
+          {en ? "Obstruction" : "通行障害がある"}
+        </button>
+      </div>
+      {!consent && (
+        <p>
+          <Link to="/profile">
+            {en
+              ? "Enable Gemini in Profile →"
+              : "プロフィールでGeminiを有効にする →"}
+          </Link>
+        </p>
+      )}
       <IonButton
         disabled={!consent || advice.isPending}
         onClick={() => advice.mutate()}
