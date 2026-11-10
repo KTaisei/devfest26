@@ -1,0 +1,9 @@
+# Submit from the repository root; the Docker build needs backend/ and data/.
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args: [build, -f, backend/Dockerfile, -t, '${_IMAGE}', .]
+images: ['${_IMAGE}']
+substitutions:
+  _IMAGE: asia-northeast1-docker.pkg.dev/tasuku-77c63/tasuku/tasuku-api:demo
+options:
+  logging: CLOUD_LOGGING_ONLY

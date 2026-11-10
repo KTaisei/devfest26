@@ -16,7 +16,12 @@ from dotenv import dotenv_values
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--project", required=True, help="Explicit real Firebase project ID")
+    parser.add_argument(
+        "--deployed", action="store_true", help="Check the team's deployed Hosting API instead"
+    )
     args = parser.parse_args()
+    if args.deployed and args.project != "tasuku-77c63":
+        parser.error("The deployed check only targets tasuku-77c63")
     root = Path(__file__).resolve().parents[1]
     backend = dotenv_values(root / "backend/.env.cloud")
     mobile = dotenv_values(root / "apps/mobile/.env.cloud")
@@ -73,7 +78,12 @@ def main():
                 "locationSharingEnabled": False,
                 "isAvailableToHelp": False,
             }
-            with TestClient(app) as client:
+            connection = (
+                httpx.Client(base_url="https://tasuku-77c63.web.app", timeout=30)
+                if args.deployed
+                else TestClient(app)
+            )
+            with connection as client:
                 health = client.get("/api/v1/health").json()
                 assert health["storage"] == "firestore" and not health["demoMode"]
                 assert client.post("/api/v1/auth/demo").status_code == 404
@@ -88,7 +98,8 @@ def main():
                 if response.status_code != 200:
                     raise RuntimeError(f"API profile save failed (HTTP {response.status_code})")
                 print("PASS: signed Firebase token verified; profile saved via API transaction")
-                repository.store = repository.FirestoreStore()
+                if not args.deployed:
+                    repository.store = repository.FirestoreStore()
                 restored = client.get("/api/v1/profile", headers=headers)
                 assert restored.status_code == 200
                 assert restored.json()["displayName"] == profile["displayName"]
@@ -97,8 +108,17 @@ def main():
                 assert (
                     not db.collection("private_locations").document(account["localId"]).get().exists
                 )
-                print("PASS: profile restored through a new Firestore adapter; no location saved")
+                print("PASS: saved profile restored from Firestore; no location saved")
                 print("PASS: unauthenticated/forged requests rejected; demo sessions disabled")
+                if args.deployed:
+                    translated = client.post(
+                        "/api/v1/translations/generate", headers=headers, json={"language": "en"}
+                    )
+                    assert translated.status_code == 200
+                    assert translated.json()["provider"] == "gemini"
+                    assert translated.json()["requiresReview"] is True
+                    assert translated.json()["sourceText"]
+                    print("PASS: deployed Vertex AI guidance generated with original drill text")
     finally:
         if account:
             # Delete only documents belonging to this exact newly created account.

@@ -6,6 +6,8 @@ Ionic + React + TypeScript / Capacitor と Python + FastAPI を分離したモ�
 
 > 福山駅付近の座標を使っていますが、道路・避難場所・災害情報はすべて架空です。実際の避難判断には使用しないでください。
 
+**公開デモ： https://tasuku-77c63.web.app** — インストールせずブラウザで試せます。更新・権限・費用に関する説明は [公開デモの運用](docs/DEPLOYMENT.md) を参照してください。
+
 ## 最初の起動
 
 Node.js 22、Python 3.14を使用します。Mac・Windows共通のコマンドです。Windowsの導入方法とPowerShellの注意点は [Windows開発手順](docs/WINDOWS.md) を参照してください。リポジトリのルートで実行してください。依存関係は `package-lock.json` と `backend/requirements.lock.txt` で固定しています。
@@ -96,14 +98,14 @@ npm run api:types
 
 [docs/SETUP.md](docs/SETUP.md) にFirebase、Google Maps、Gemini、Cloud Run、Capacitorの設定をまとめています。秘密鍵・`.env` はコミットしません。FirebaseのWeb設定・Google Mapsのブラウザキーは公開される前提なので、API制限・リファラー制限を設定してください。
 
-Firebaseは実プロジェクトでのAPI認証・プロフィール保存・復元と、ブラウザでの保存・再読み込みまで確認済みです。Google Mapsはローカルで背景地図・架空マーカー・模擬経路の表示を確認済みです。GeminiはVertex AI経由で日本語・英語の模擬案内生成を確認しました。Cloud Runへのデプロイ、iOS/Android実機は未検証です。詳細は [検証記録](docs/TESTING.md) を参照してください。
+Firebase HostingとCloud Runへ公開しました。公開APIのFirebase認証・Firestore保存・復元・Vertex AI生成を確認済みです。iOS/Android実機は未検証です。詳細は [検証記録](docs/TESTING.md) を参照してください。
 
 ## MVPの残作業
 
 この実装は仕様v2.0の土台と一連のデモフローです。すべての完成条件を検証済みという意味ではありません。
 
-- Google Maps・Vertex AIはローカル実接続済み。公開環境・モバイル表示の検証へ進む（設定は各自のGit管理外 `.env.cloud`）
-- Firebase実環境での同時承諾・ルール・TTL検証と共同開発者のIAM設定（基本の認証・保存は確認済み）
+- 公開環境で2人の支援フローとスマートフォン実機を確認する（地図・AI・保存は公開版でも確認済み）
+- Firebase実環境での同時承諾競合・TTL非同期削除の検証と共同開発者のIAM設定（ルール・TTL設定は公開先へ反映済み）
 - F-014の支援要請文からの支援内容抽出（現状は選択式）
 - 通知、複数候補への自動再依頼
 - iOS/Androidプロジェクト追加・権限文言・実機確認

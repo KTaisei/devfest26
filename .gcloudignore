@@ -1,0 +1,14 @@
+# Only runtime source is uploaded to Cloud Build. In particular, no local .env or ADC.
+**
+!cloudbuild.yaml
+!backend/
+!backend/Dockerfile
+!backend/requirements.lock.txt
+!backend/app/
+!backend/app/**
+!data/
+!data/simulation/
+!data/simulation/**
+**/__pycache__/**
+**/*.pyc
+**/.env*

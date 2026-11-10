@@ -84,9 +84,9 @@ AI Studio方式を使う場合は `GEMINI_BACKEND=developer` と `GEMINI_API_KEY
  docker build -f backend/Dockerfile -t tasuku-api .
 ```
 
-コンテナは `$PORT`（デフォルト8080）で起動します。Firebase Hostingのrewriteは `tasuku-api` / `asia-northeast1` を想定しています。実サービス名・リージョンに合わせて `firebase.json` を編集します。`npm run build` の生成物は `apps/mobile/dist` です。
+コンテナは `$PORT`（デフォルト8080）で起動します。Firebase Hostingのrewriteは `tasuku-api` / `asia-northeast1` を使用します。公開用は `npm run build:hosting` でビルドし、生成物は `apps/mobile/dist` です。Mac・Windows共通の更新コマンドと権限構成は [DEPLOYMENT.md](DEPLOYMENT.md) を参照してください。
 
-クラウド上では `DEMO_MODE=false`、Firestore保存、Firebase認証を必須とし、CORS_ORIGINSを実際のWebホストに限定します。模擬データ表示は引き続き有効です。自動デプロイは未設定で、GitHub Actionsはビルドとテストのみ実行します。実環境の動作確認・権限・Secret Manager設定を終えてからデプロイしてください。
+クラウド上では `DEMO_MODE=false`、Firestore保存、Firebase認証を必須とし、CORS_ORIGINSを実際のWebホストに限定します。模擬データ表示は引き続き有効です。Vertex AIは実行アカウントで認証し、秘密鍵・AI Studioキーをデプロイしません。自動デプロイは未設定で、GitHub Actionsはビルドとテストのみ実行します。
 
 ## Capacitor / iOS / Android
 
