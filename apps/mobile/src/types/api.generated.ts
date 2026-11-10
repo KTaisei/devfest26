@@ -21,6 +21,57 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/routes/walking-preview": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Walking Preview */
+    post: operations["walking_preview_api_v1_routes_walking_preview_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/earthquakes/recent": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Recent Earthquakes */
+    get: operations["recent_earthquakes_api_v1_earthquakes_recent_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/matches/{match_id}/route": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Meeting Route */
+    post: operations["meeting_route_api_v1_matches__match_id__route_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/auth/demo": {
     parameters: {
       query?: never;
@@ -367,6 +418,39 @@ export interface components {
        */
       walkingSpeedMetersPerSecond: number;
     };
+    /** EarthquakeFeedOutput */
+    EarthquakeFeedOutput: {
+      /**
+       * Provider
+       * @default jma_atom
+       * @constant
+       */
+      provider: "jma_atom";
+      /**
+       * Eewstatus
+       * @default not_connected
+       * @constant
+       */
+      eewStatus: "not_connected";
+      /**
+       * Status
+       * @enum {string}
+       */
+      status: "available" | "unavailable";
+      /** Fetchedat */
+      fetchedAt?: string | null;
+      /** Notices */
+      notices: components["schemas"]["EarthquakeNotice"][];
+    };
+    /** EarthquakeNotice */
+    EarthquakeNotice: {
+      /** Title */
+      title: string;
+      /** Publishedat */
+      publishedAt: string;
+      /** Sourceurl */
+      sourceUrl: string;
+    };
     /** EvacuationRoute */
     EvacuationRoute: {
       /** Routeid */
@@ -479,6 +563,22 @@ export interface components {
       /** Requesterseconds */
       requesterSeconds: number;
     };
+    /** MeetingRouteOutput */
+    MeetingRouteOutput: {
+      /**
+       * Datastatus
+       * @default simulation
+       * @constant
+       */
+      dataStatus: "simulation";
+      geometry: components["schemas"]["Geometry"];
+      /** Distancemeters */
+      distanceMeters: number;
+      /** Estimatedseconds */
+      estimatedSeconds: number;
+      /** Warnings */
+      warnings: string[];
+    };
     /** Profile */
     Profile: {
       /**
@@ -568,6 +668,49 @@ export interface components {
        * @enum {string}
        */
       status: "meeting" | "assisting";
+    };
+    /** RealRouteInput */
+    RealRouteInput: {
+      origin: components["schemas"]["Location"];
+      destination: components["schemas"]["Location"];
+      /** Locationuseconsent */
+      locationUseConsent: boolean;
+    };
+    /** RealRouteOutput */
+    RealRouteOutput: {
+      /**
+       * Provider
+       * @default google_routes
+       * @constant
+       */
+      provider: "google_routes";
+      /**
+       * Datastatus
+       * @default real_preview
+       * @constant
+       */
+      dataStatus: "real_preview";
+      /** Distancemeters */
+      distanceMeters: number;
+      /** Providerseconds */
+      providerSeconds: number;
+      /** Personalestimatedseconds */
+      personalEstimatedSeconds: number;
+      /** Walkingspeedmeterspersecond */
+      walkingSpeedMetersPerSecond: number;
+      /**
+       * Accessibility
+       * @default unverified
+       * @constant
+       */
+      accessibility: "unverified";
+      geometry: components["schemas"]["Geometry"];
+      /** Steps */
+      steps: components["schemas"]["WalkingStep"][];
+      /** Warnings */
+      warnings: string[];
+      /** Checkedat */
+      checkedAt: string;
     };
     /** RecommendInput */
     RecommendInput: {
@@ -715,6 +858,14 @@ export interface components {
       /** Context */
       ctx?: Record<string, never>;
     };
+    /** WalkingStep */
+    WalkingStep: {
+      /** Instruction */
+      instruction: string;
+      /** Distancemeters */
+      distanceMeters: number;
+      start: components["schemas"]["Location"];
+    };
   };
   responses: never;
   parameters: never;
@@ -740,6 +891,94 @@ export interface operations {
         };
         content: {
           "application/json": unknown;
+        };
+      };
+    };
+  };
+  walking_preview_api_v1_routes_walking_preview_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["RealRouteInput"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RealRouteOutput"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  recent_earthquakes_api_v1_earthquakes_recent_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["EarthquakeFeedOutput"];
+        };
+      };
+    };
+  };
+  meeting_route_api_v1_matches__match_id__route_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        match_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["Location"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MeetingRouteOutput"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
     };

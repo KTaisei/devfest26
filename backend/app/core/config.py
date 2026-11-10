@@ -19,6 +19,8 @@ class Settings(BaseSettings):
     gemini_location: str = "global"
     gemini_api_key: str = ""
     gemini_model: str = "gemini-3.5-flash"
+    real_routes_enabled: bool = False
+    routes_project_id: str = ""
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
 
     @model_validator(mode="after")

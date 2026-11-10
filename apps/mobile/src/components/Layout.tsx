@@ -26,10 +26,12 @@ export function Layout({
   children,
   title,
   eyebrow,
+  dataMode = "simulation",
 }: {
   children: ReactNode;
   title: string;
   eyebrow?: string;
+  dataMode?: "simulation" | "real_preview";
 }) {
   const { language, setLanguage } = useAppStore();
   const en = language === "en";
@@ -128,9 +130,13 @@ export function Layout({
             </header>
             <div className="simulation-label">
               <span className="status-dot" />
-              {en
-                ? "SIMULATION · All places and roads are fictional. Not for real evacuation."
-                : "訓練・シミュレーション中 · 避難場所・道路は架空です。実際の避難には使用できません。"}
+              {dataMode === "real_preview"
+                ? en
+                  ? "TRAINING · Real road preview. Accessibility and disaster safety are unverified. Not for real evacuation."
+                  : "訓練・実道路の試験表示 · 通行可否・移動条件への対応は未確認です。実際の避難には使用できません。"
+                : en
+                  ? "SIMULATION · All places and roads are fictional. Not for real evacuation."
+                  : "訓練・シミュレーション中 · 避難場所・道路は架空です。実際の避難には使用できません。"}
             </div>
             <div className="page-body">
               <div className="page-heading">
@@ -141,7 +147,13 @@ export function Layout({
                   <h1>{title}</h1>
                 </div>
                 <span className="area-tag">
-                  {en ? "Fukuyama demo area" : "福山駅周辺・模擬エリア"}
+                  {dataMode === "real_preview"
+                    ? en
+                      ? "Your selected points"
+                      : "選択した出発地・目的地"
+                    : en
+                      ? "Fukuyama demo area"
+                      : "福山駅周辺・模擬エリア"}
                 </span>
               </div>
               {children}
@@ -155,6 +167,7 @@ export function Layout({
                 activeClassName="active"
                 isActive={(_, location) =>
                   location.pathname === l.to ||
+                  (l.to === "/home" && location.pathname === "/navigation") ||
                   (l.to === "/support" && location.pathname === "/matching")
                 }
               >

@@ -68,17 +68,65 @@ class TranslationInput(BaseModel):
     language: Literal["ja", "en"]
 
 
+class Geometry(BaseModel):
+    type: Literal["LineString"] = "LineString"
+    coordinates: list[tuple[float, float]]
+
+
+class RealRouteInput(BaseModel):
+    origin: Location
+    destination: Location
+    locationUseConsent: bool
+
+
+class WalkingStep(BaseModel):
+    instruction: str
+    distanceMeters: int
+    start: Location
+
+
+class RealRouteOutput(BaseModel):
+    provider: Literal["google_routes"] = "google_routes"
+    dataStatus: Literal["real_preview"] = "real_preview"
+    distanceMeters: int
+    providerSeconds: int
+    personalEstimatedSeconds: int
+    walkingSpeedMetersPerSecond: float
+    accessibility: Literal["unverified"] = "unverified"
+    geometry: Geometry
+    steps: list[WalkingStep]
+    warnings: list[str]
+    checkedAt: str
+
+
+class MeetingRouteOutput(BaseModel):
+    dataStatus: Literal["simulation"] = "simulation"
+    geometry: Geometry
+    distanceMeters: float
+    estimatedSeconds: int
+    warnings: list[str]
+
+
+class EarthquakeNotice(BaseModel):
+    title: str
+    publishedAt: str
+    sourceUrl: str
+
+
+class EarthquakeFeedOutput(BaseModel):
+    provider: Literal["jma_atom"] = "jma_atom"
+    eewStatus: Literal["not_connected"] = "not_connected"
+    status: Literal["available", "unavailable"]
+    fetchedAt: str | None = None
+    notices: list[EarthquakeNotice]
+
+
 class ProgressInput(BaseModel):
     status: Literal["meeting", "assisting"]
 
 
 class ProfileOutput(Profile):
     uid: str
-
-
-class Geometry(BaseModel):
-    type: Literal["LineString"] = "LineString"
-    coordinates: list[tuple[float, float]]
 
 
 class EvacuationRoute(BaseModel):

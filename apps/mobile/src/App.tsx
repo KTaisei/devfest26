@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { WelcomePage } from "./pages/WelcomePage";
 import { hasSeenOnboarding } from "./services/onboarding";
 import { HomePage } from "./pages/HomePage";
+import { NavigationPage } from "./pages/NavigationPage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { SupportPage } from "./pages/SupportPage";
 import { HelperPage } from "./pages/HelperPage";
@@ -33,6 +34,7 @@ export default function App() {
         <IonRouterOutlet>
           <Route exact path="/welcome" component={WelcomePage} />
           <Route exact path="/home" component={HomePage} />
+          <Route exact path="/navigation" component={NavigationPage} />
           <Route exact path="/profile" component={ProfilePage} />
           <Route exact path="/support" component={SupportPage} />
           <Route exact path="/helper" component={HelperPage} />

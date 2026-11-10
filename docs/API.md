@@ -1,5 +1,7 @@
 # API契約
 
+実データ試験の追加APIは `POST /routes/walking-preview`（送信同意・本人プロフィール・Google Routes ADCが必要）、`GET /earthquakes/recent`（気象庁公開情報、EEW未接続）、`POST /matches/{match_id}/route`（参加者限定・模擬合流経路）です。詳細は [REAL_DATA.md](REAL_DATA.md) を参照してください。モデル変更に合わせてOpenAPIとTypeScriptを再生成しています。
+
 正本は `backend/app/models/schemas.py` とルーターから生成する [openapi.json](openapi.json) です。稼働中の `/docs` でも確認できます。ベースパスは `/api/v1`。
 
 ## 認証

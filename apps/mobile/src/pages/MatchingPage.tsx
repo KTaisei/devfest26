@@ -12,6 +12,7 @@ import { getSession } from "../services/auth";
 import { api } from "../services/api";
 import { supportLabel } from "./SupportPage";
 import type { Match, MatchStatus } from "../types/domain";
+import { MeetingRoute } from "../components/MeetingRoute";
 
 const statusLabel = (status: MatchStatus, en: boolean) =>
   en
@@ -83,6 +84,10 @@ export function MatchCards({ helper = false }: { helper?: boolean }) {
                     : "承諾時の架空道路で計算した地点です。道路条件が変わった場合は中止して再依頼してください。実際の避難には使えません。"}
                 </p>
               </div>
+            )}
+          {m.meetingPoint &&
+            ["accepted", "meeting", "assisting"].includes(m.status) && (
+              <MeetingRoute matchId={m.id} en={en} />
             )}
           <p className="muted">
             {en

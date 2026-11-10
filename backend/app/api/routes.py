@@ -16,6 +16,10 @@ from ..models.schemas import (
     RouteOutput,
     RequestOutput,
     MatchOutput,
+    RealRouteInput,
+    RealRouteOutput,
+    MeetingRouteOutput,
+    EarthquakeFeedOutput,
 )
 from ..services.route_optimizer import DATA, NODES, calculate, roads, now
 from ..services.matching_engine import ACTIVE, create_request, recommend, transition, expire_offers
@@ -32,6 +36,27 @@ def health():
         "storage": settings().storage_backend,
         "dataStatus": "simulation",
     }
+
+
+@router.post("/routes/walking-preview", response_model=RealRouteOutput)
+def walking_preview(payload: RealRouteInput, user: Actor = Depends(actor)):
+    from ..services.real_routes import calculate
+
+    return calculate(payload, repository.store.get("users", user.uid), user.uid)
+
+
+@router.get("/earthquakes/recent", response_model=EarthquakeFeedOutput)
+def recent_earthquakes(user: Actor = Depends(actor)):
+    from ..services.earthquakes import latest
+
+    return latest()
+
+
+@router.post("/matches/{match_id}/route", response_model=MeetingRouteOutput)
+def meeting_route(match_id: str, payload: Location, user: Actor = Depends(actor)):
+    from ..services.meeting_routes import calculate
+
+    return calculate(user.uid, match_id, payload)
 
 
 @router.post("/auth/demo")

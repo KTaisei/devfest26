@@ -68,6 +68,16 @@ export function HomePage() {
           ? "Know where to go. Connect with someone nearby."
           : "避難先を確かめる。近くの誰かと、つながる。"}
       </p>
+      <div className="setup-banner">
+        <span>
+          {en
+            ? "Real roads and public earthquake information"
+            : "実道路の徒歩案内と地震公開情報を試す"}
+        </span>
+        <IonButton routerLink="/navigation" fill="outline">
+          {en ? "Open real road preview" : "実道路の案内（試験）"}
+        </IonButton>
+      </div>
       {!profile && (
         <div className="setup-banner">
           {en

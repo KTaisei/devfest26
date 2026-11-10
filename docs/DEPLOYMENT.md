@@ -29,6 +29,7 @@ npx firebase deploy --project=tasuku-77c63 --only hosting,firestore:rules,firest
 
 - Artifact Registry: 東京リージョンのDockerリポジトリ `tasuku`。
 - `tasuku-api` 実行アカウント: `roles/datastore.user`、`roles/firebaseauth.viewer`、`roles/aiplatform.user`。鍵ファイルは作成しない。
+- 実道路試験の追加ではRoutes APIを有効化し、実行アカウントに `roles/serviceusage.serviceUsageConsumer` を追加した。`deploy/cloudrun.env.yaml` の `REAL_ROUTES_ENABLED` と `ROUTES_PROJECT_ID` で接続を明示する。
 - `tasuku-build` ビルドアカウント: プロジェクトの `roles/storage.objectViewer` と `roles/logging.logWriter`、`tasuku` リポジトリの `roles/artifactregistry.writer`。実行アカウントとは分ける。
 - `.gcloudignore` はアップロード許可リスト。API実行コード・依存固定ファイル・模擬データ・Cloud Build定義だけを含め、`.env`、ADC、テスト、フロントコードを送信しない。
 - `private_locations.expiresAt` にFirestore TTLを設定する。TTLは即時削除ではない。Cloud Runはリクエスト処理中以外にCPUが停止することがあり、アプリ内の60秒ごとの削除だけに依存しない。位置は保存後30分で候補評価から除外する。
@@ -45,5 +46,7 @@ MapsのブラウザキーのHTTPリファラーに `https://tasuku-77c63.web.app
 - 2人デモは別ブラウザ／別プロファイルで [DEMO.md](DEMO.md) を実施する。同じブラウザのタブは匿名ユーザーを共有する。
 
 ADCと両方の `.env.cloud` を設定済みの開発端末では、`npm run verify:cloud -- --project tasuku-77c63 --deployed` で公開APIの認証拒否・プロフィール保存復元・Vertex生成を確認できます。新しい検証専用アカウントだけを作成し、終了時にそのプロフィールとアカウントを削除します。位置は保存しません。既存のコレクションを消去する処理はありません。
+
+さらに `--real-roads` を追加すると、公開地点2点での実道路経路・送信同意拒否・気象庁公開情報を確認します。実GPSは取得しません。詳細は [REAL_DATA.md](REAL_DATA.md) を参照してください。
 
 最大インスタンスは1、最小は0ですが、Firestore・ビルド・保存・Maps・Vertexを含む無料利用を保証しません。ハッカソンクレジットの残額と対象は請求画面で確認してください。全件scanとポーリングを使う小規模デモで、利用者数を増やす前に [ARCHITECTURE.md](ARCHITECTURE.md) の制限を解消します。実端末のGPS・キーボード・iOS/Androidアプリは別途検証が必要です。

@@ -21,6 +21,126 @@
         }
       }
     },
+    "/api/v1/routes/walking-preview": {
+      "post": {
+        "summary": "Walking Preview",
+        "operationId": "walking_preview_api_v1_routes_walking_preview_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RealRouteInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RealRouteOutput"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/earthquakes/recent": {
+      "get": {
+        "summary": "Recent Earthquakes",
+        "operationId": "recent_earthquakes_api_v1_earthquakes_recent_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EarthquakeFeedOutput"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/matches/{match_id}/route": {
+      "post": {
+        "summary": "Meeting Route",
+        "operationId": "meeting_route_api_v1_matches__match_id__route_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "match_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Match Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Location"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeetingRouteOutput"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/auth/demo": {
       "post": {
         "summary": "Demo Session",
@@ -788,6 +908,77 @@
         "type": "object",
         "title": "Constraints"
       },
+      "EarthquakeFeedOutput": {
+        "properties": {
+          "provider": {
+            "type": "string",
+            "const": "jma_atom",
+            "title": "Provider",
+            "default": "jma_atom"
+          },
+          "eewStatus": {
+            "type": "string",
+            "const": "not_connected",
+            "title": "Eewstatus",
+            "default": "not_connected"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "available",
+              "unavailable"
+            ],
+            "title": "Status"
+          },
+          "fetchedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fetchedat"
+          },
+          "notices": {
+            "items": {
+              "$ref": "#/components/schemas/EarthquakeNotice"
+            },
+            "type": "array",
+            "title": "Notices"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "notices"
+        ],
+        "title": "EarthquakeFeedOutput"
+      },
+      "EarthquakeNotice": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "publishedAt": {
+            "type": "string",
+            "title": "Publishedat"
+          },
+          "sourceUrl": {
+            "type": "string",
+            "title": "Sourceurl"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "publishedAt",
+          "sourceUrl"
+        ],
+        "title": "EarthquakeNotice"
+      },
       "EvacuationRoute": {
         "properties": {
           "routeId": {
@@ -1071,6 +1262,42 @@
         ],
         "title": "MeetingPoint"
       },
+      "MeetingRouteOutput": {
+        "properties": {
+          "dataStatus": {
+            "type": "string",
+            "const": "simulation",
+            "title": "Datastatus",
+            "default": "simulation"
+          },
+          "geometry": {
+            "$ref": "#/components/schemas/Geometry"
+          },
+          "distanceMeters": {
+            "type": "number",
+            "title": "Distancemeters"
+          },
+          "estimatedSeconds": {
+            "type": "integer",
+            "title": "Estimatedseconds"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "geometry",
+          "distanceMeters",
+          "estimatedSeconds",
+          "warnings"
+        ],
+        "title": "MeetingRouteOutput"
+      },
       "Profile": {
         "properties": {
           "displayName": {
@@ -1218,6 +1445,98 @@
           "status"
         ],
         "title": "ProgressInput"
+      },
+      "RealRouteInput": {
+        "properties": {
+          "origin": {
+            "$ref": "#/components/schemas/Location"
+          },
+          "destination": {
+            "$ref": "#/components/schemas/Location"
+          },
+          "locationUseConsent": {
+            "type": "boolean",
+            "title": "Locationuseconsent"
+          }
+        },
+        "type": "object",
+        "required": [
+          "origin",
+          "destination",
+          "locationUseConsent"
+        ],
+        "title": "RealRouteInput"
+      },
+      "RealRouteOutput": {
+        "properties": {
+          "provider": {
+            "type": "string",
+            "const": "google_routes",
+            "title": "Provider",
+            "default": "google_routes"
+          },
+          "dataStatus": {
+            "type": "string",
+            "const": "real_preview",
+            "title": "Datastatus",
+            "default": "real_preview"
+          },
+          "distanceMeters": {
+            "type": "integer",
+            "title": "Distancemeters"
+          },
+          "providerSeconds": {
+            "type": "integer",
+            "title": "Providerseconds"
+          },
+          "personalEstimatedSeconds": {
+            "type": "integer",
+            "title": "Personalestimatedseconds"
+          },
+          "walkingSpeedMetersPerSecond": {
+            "type": "number",
+            "title": "Walkingspeedmeterspersecond"
+          },
+          "accessibility": {
+            "type": "string",
+            "const": "unverified",
+            "title": "Accessibility",
+            "default": "unverified"
+          },
+          "geometry": {
+            "$ref": "#/components/schemas/Geometry"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/WalkingStep"
+            },
+            "type": "array",
+            "title": "Steps"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          },
+          "checkedAt": {
+            "type": "string",
+            "title": "Checkedat"
+          }
+        },
+        "type": "object",
+        "required": [
+          "distanceMeters",
+          "providerSeconds",
+          "personalEstimatedSeconds",
+          "walkingSpeedMetersPerSecond",
+          "geometry",
+          "steps",
+          "warnings",
+          "checkedAt"
+        ],
+        "title": "RealRouteOutput"
       },
       "RecommendInput": {
         "properties": {
@@ -1513,6 +1832,28 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "WalkingStep": {
+        "properties": {
+          "instruction": {
+            "type": "string",
+            "title": "Instruction"
+          },
+          "distanceMeters": {
+            "type": "integer",
+            "title": "Distancemeters"
+          },
+          "start": {
+            "$ref": "#/components/schemas/Location"
+          }
+        },
+        "type": "object",
+        "required": [
+          "instruction",
+          "distanceMeters",
+          "start"
+        ],
+        "title": "WalkingStep"
       }
     },
     "securitySchemes": {

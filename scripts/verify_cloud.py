@@ -19,9 +19,14 @@ def main():
     parser.add_argument(
         "--deployed", action="store_true", help="Check the team's deployed Hosting API instead"
     )
+    parser.add_argument(
+        "--real-roads", action="store_true", help="Also test public road points; never reads GPS"
+    )
     args = parser.parse_args()
     if args.deployed and args.project != "tasuku-77c63":
         parser.error("The deployed check only targets tasuku-77c63")
+    if args.real_roads and not args.deployed:
+        parser.error("--real-roads requires --deployed")
     root = Path(__file__).resolve().parents[1]
     backend = dotenv_values(root / "backend/.env.cloud")
     mobile = dotenv_values(root / "apps/mobile/.env.cloud")
@@ -119,6 +124,32 @@ def main():
                     assert translated.json()["requiresReview"] is True
                     assert translated.json()["sourceText"]
                     print("PASS: deployed Vertex AI guidance generated with original drill text")
+                if args.real_roads:
+                    points = {
+                        "origin": {"latitude": 34.4884, "longitude": 133.3614},
+                        "destination": {"latitude": 34.4893, "longitude": 133.3626},
+                        "locationUseConsent": True,
+                    }
+                    rejected = client.post(
+                        "/api/v1/routes/walking-preview",
+                        headers=headers,
+                        json={**points, "locationUseConsent": False},
+                    )
+                    assert rejected.status_code == 422
+                    routed = client.post(
+                        "/api/v1/routes/walking-preview", headers=headers, json=points
+                    )
+                    assert routed.status_code == 200, f"Road provider status {routed.status_code}"
+                    assert routed.json()["dataStatus"] == "real_preview"
+                    assert routed.json()["accessibility"] == "unverified"
+                    assert routed.json()["steps"]
+                    notices = client.get("/api/v1/earthquakes/recent", headers=headers)
+                    assert notices.status_code == 200
+                    assert notices.json()["eewStatus"] == "not_connected"
+                    assert notices.json()["status"] == "available"
+                    print(
+                        "PASS: real road route with explicit consent; public earthquake feed remains distinct from EEW"
+                    )
     finally:
         if account:
             # Delete only documents belonging to this exact newly created account.
