@@ -97,3 +97,11 @@ npm run typecheck
 | `POST /assistance/{id}/progress` | arrive / complete / cancel。arriveだけ同意と新しいGPS入力が必要。双方確認後のみmet                 |
 
 `GET /earthquakes/recent` は旧版クライアント用のJMA Atom互換APIです。通常画面は使用しません。実位置の支援は旧 `/support-requests`・`/matches` の架空グラフを呼びません。
+
+## 音声案内・Gemini判断補助の追加契約
+
+- `RealRouteOutput.steps` に `end`、`geometry`（各区間の道路形状）、`maneuver` を追加。全体経路はGoogleのHIGH_QUALITY形状で取得します。前景の進行計算はクライアント内で行い、通常の位置更新ごとにAPIを呼びません。
+- `AssistanceConsentInput` / `AssistanceInput` に `aiUseConsent`（既定false）を追加。依頼時の同意を保持し、承諾側も同意した場合だけGemini比較します。相手の同意フラグ・所要時間・GPSは公開しません。
+- `AssistanceOutput.decision` は選定時の `DecisionSupport` またはnull。providerは `gemini` / `rules` / `rules_fallback`。安全性は常に `unverified`。
+- 認証必須の `POST /evacuation/advice` は `origin`、`locationUseConsent`、`aiUseConsent`、本人の `shaking` / `blocked`（既定false）を受けます。両方の利用同意なしは422。サーバーが取得した地域情報と本人の支援状態から、定義済みの次の確認行動を返します。AIへは座標・地域名・利用者IDを送信しません。
+- 経路再計算は避難先には既存 `/routes/walking-preview`、合流には所有者検証がある `/assistance/{id}/route` を使います。双方の合流確認APIはGPS推定到着で自動実行しません。

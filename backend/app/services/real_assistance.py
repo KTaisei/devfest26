@@ -8,10 +8,11 @@ not emergency dispatch or an assertion of road/site safety.
 
 from datetime import datetime, timedelta, timezone
 from uuid import uuid4
+from concurrent.futures import ThreadPoolExecutor
 from fastapi import HTTPException
 from ..core import store as repository
 from ..models.schemas import AssistanceOutput, Location, RealRouteInput
-from . import real_routes, real_shelters
+from . import real_routes, real_shelters, decision_support
 
 WARNINGS = [
     "実位置を使う訓練・試験機能です。道路の被災・開設・入口・車いす対応は未確認です。 / Real-position trial; road and site safety/accessibility are unverified.",
@@ -46,7 +47,7 @@ def view(item, uid):
     if uid not in {item["requesterId"], item.get("helperId")}:
         raise HTTPException(404, "Assistance not found.")
     return AssistanceOutput(
-        **{k: v for k, v in item.items() if k not in {"requesterId", "helperId"}},
+        **{k: v for k, v in item.items() if k not in {"requesterId", "helperId", "aiUseConsent"}},
         role="requester" if uid == item["requesterId"] else "helper",
         warnings=WARNINGS,
     )
@@ -97,6 +98,7 @@ def create(uid, payload):
     item = {
         "id": uuid4().hex,
         "requesterId": uid,
+        "aiUseConsent": payload.aiUseConsent,
         "helperId": None,
         "status": "waiting",
         "supportType": payload.supportType,
@@ -193,20 +195,43 @@ def accept(uid, request_id, payload):
     sites.sort(key=lambda s: real_shelters.distance(payload.origin, s) + s.distanceMeters)
     if not sites:
         raise HTTPException(409, "No published meeting site in range of both participants.")
-    site = sites[0]
-    # Each has explicitly authorised Google routing. Discard the private route
-    # geometries; acceptance returns only the PUBLIC destination to both parties.
-    for start, person, owner in (
-        (Location(**point), requester, item["requesterId"]),
-        (payload.origin, helper, uid),
-    ):
-        route = real_routes.calculate(
-            RealRouteInput(origin=start, destination=site, locationUseConsent=True), person, owner
-        )
-        if route.personalEstimatedSeconds > 1800:
-            raise HTTPException(
-                409, "A participant's ordinary walking approach exceeds 30 minutes."
-            )
+    # AI compares only already verified options, without names/coordinates or
+    # individual metrics. Consent is required from BOTH participants.
+    ai_enabled = payload.aiUseConsent and item.get("aiUseConsent", False)
+
+    def verify_site(site):
+        times = []
+        try:
+            for start, person, owner in (
+                (Location(**point), requester, item["requesterId"]),
+                (payload.origin, helper, uid),
+            ):
+                route = real_routes.calculate(
+                    RealRouteInput(origin=start, destination=site, locationUseConsent=True),
+                    person,
+                    owner,
+                )
+                times.append(route.personalEstimatedSeconds)
+        except HTTPException as exc:
+            if exc.status_code == 422:
+                return None
+            raise
+        if max(times) <= 1800:
+            return site, {"totalSeconds": sum(times), "maxSeconds": max(times)}
+        return None
+
+    # Bounded parallel candidates keep 6 provider calls + Gemini within the
+    # request timeout. Each route owns its session and the limiter is locked.
+    candidates = sites[:3] if ai_enabled else sites[:1]
+    if len(candidates) == 1:
+        verified = [value] if (value := verify_site(candidates[0])) else []
+    else:
+        with ThreadPoolExecutor(max_workers=3) as pool:
+            verified = [value for value in pool.map(verify_site, candidates) if value]
+    if not verified:
+        raise HTTPException(409, "No verified ordinary walking approaches within 30 minutes.")
+    index, decision = decision_support.meeting([v[1] for v in verified], ai_enabled)
+    site = verified[index][0]
 
     def commit(tx):
         current = tx.get("real_assistance", request_id)
@@ -230,6 +255,7 @@ def accept(uid, request_id, payload):
         current.update(
             status="accepted",
             helperId=uid,
+            decision=decision.model_dump(),
             meetingPoint=site.model_dump(exclude={"distanceMeters"}),
         )
         tx.put("real_assistance", request_id, current)

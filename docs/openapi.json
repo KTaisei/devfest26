@@ -1343,6 +1343,49 @@
           }
         ]
       }
+    },
+    "/api/v1/evacuation/advice": {
+      "post": {
+        "summary": "Evacuation Advice",
+        "operationId": "evacuation_advice_api_v1_evacuation_advice_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvacuationAdviceInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DecisionSupport"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -1395,6 +1438,11 @@
             "type": "boolean",
             "title": "Locationuseconsent"
           },
+          "aiUseConsent": {
+            "type": "boolean",
+            "title": "Aiuseconsent",
+            "default": false
+          },
           "locationSharingConsent": {
             "type": "boolean",
             "title": "Locationsharingconsent"
@@ -1416,6 +1464,11 @@
           "locationUseConsent": {
             "type": "boolean",
             "title": "Locationuseconsent"
+          },
+          "aiUseConsent": {
+            "type": "boolean",
+            "title": "Aiuseconsent",
+            "default": false
           },
           "locationSharingConsent": {
             "type": "boolean",
@@ -1481,6 +1534,16 @@
             "anyOf": [
               {
                 "$ref": "#/components/schemas/PublicMeetingPoint"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "decision": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DecisionSupport"
               },
               {
                 "type": "null"
@@ -1576,6 +1639,72 @@
         "type": "object",
         "title": "Constraints"
       },
+      "DecisionSupport": {
+        "properties": {
+          "provider": {
+            "type": "string",
+            "enum": [
+              "gemini",
+              "rules",
+              "rules_fallback"
+            ],
+            "title": "Provider"
+          },
+          "purpose": {
+            "type": "string",
+            "enum": [
+              "meeting",
+              "evacuation"
+            ],
+            "title": "Purpose"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "compare_approaches",
+              "check_surroundings",
+              "check_official_information",
+              "review_route",
+              "review_meeting",
+              "confirm_in_person"
+            ],
+            "title": "Action"
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "balanced_approaches",
+              "shorter_total",
+              "reported_hazard",
+              "information_unavailable",
+              "local_notice",
+              "active_meeting",
+              "both_confirmed",
+              "no_local_notice"
+            ],
+            "title": "Reason"
+          },
+          "requiresReview": {
+            "type": "boolean",
+            "title": "Requiresreview",
+            "default": true
+          },
+          "safetyStatus": {
+            "type": "string",
+            "const": "unverified",
+            "title": "Safetystatus",
+            "default": "unverified"
+          }
+        },
+        "type": "object",
+        "required": [
+          "provider",
+          "purpose",
+          "action",
+          "reason"
+        ],
+        "title": "DecisionSupport"
+      },
       "EarthquakeFeedOutput": {
         "properties": {
           "provider": {
@@ -1646,6 +1775,38 @@
           "sourceUrl"
         ],
         "title": "EarthquakeNotice"
+      },
+      "EvacuationAdviceInput": {
+        "properties": {
+          "origin": {
+            "$ref": "#/components/schemas/Location"
+          },
+          "locationUseConsent": {
+            "type": "boolean",
+            "title": "Locationuseconsent"
+          },
+          "aiUseConsent": {
+            "type": "boolean",
+            "title": "Aiuseconsent"
+          },
+          "shaking": {
+            "type": "boolean",
+            "title": "Shaking",
+            "default": false
+          },
+          "blocked": {
+            "type": "boolean",
+            "title": "Blocked",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "origin",
+          "locationUseConsent",
+          "aiUseConsent"
+        ],
+        "title": "EvacuationAdviceInput"
       },
       "EvacuationRoute": {
         "properties": {
@@ -2834,6 +2995,31 @@
           },
           "start": {
             "$ref": "#/components/schemas/Location"
+          },
+          "end": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Location"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "geometry": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Geometry"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "maneuver": {
+            "type": "string",
+            "title": "Maneuver",
+            "default": "MANEUVER_UNSPECIFIED"
           }
         },
         "type": "object",

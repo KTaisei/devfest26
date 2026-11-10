@@ -29,6 +29,8 @@ from ..models.schemas import (
     AssistanceOutput,
     AssistanceProgress,
     ShelterRecommendation,
+    EvacuationAdviceInput,
+    DecisionSupport,
 )
 from ..services.route_optimizer import DATA, NODES, calculate, roads, now
 from ..services.matching_engine import ACTIVE, create_request, recommend, transition, expire_offers
@@ -312,3 +314,10 @@ def complete_match(match_id: str, user: Actor = Depends(actor)):
 @router.post("/translations/generate")
 def translation(payload: TranslationInput, user: Actor = Depends(actor)):
     return translate(payload.language)
+
+
+@router.post("/evacuation/advice", response_model=DecisionSupport)
+def evacuation_advice(payload: EvacuationAdviceInput, user: Actor = Depends(actor)):
+    from ..services.decision_support import evacuation
+
+    return evacuation(user.uid, payload)

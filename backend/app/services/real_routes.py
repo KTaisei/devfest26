@@ -56,6 +56,7 @@ def fetch_route(payload: RealRouteInput, language: str):
     body.update(
         travelMode="WALK",
         polylineEncoding="GEO_JSON_LINESTRING",
+        polylineQuality="HIGH_QUALITY",
         languageCode=language,
         units="METRIC",
     )
@@ -65,7 +66,7 @@ def fetch_route(payload: RealRouteInput, language: str):
             "https://routes.googleapis.com/directions/v2:computeRoutes",
             headers={
                 "X-Goog-User-Project": config.routes_project_id,
-                "X-Goog-FieldMask": "routes.distanceMeters,routes.duration,routes.polyline.geoJsonLinestring,routes.warnings,routes.legs.steps.navigationInstruction,routes.legs.steps.distanceMeters,routes.legs.steps.startLocation",
+                "X-Goog-FieldMask": "routes.distanceMeters,routes.duration,routes.polyline.geoJsonLinestring,routes.warnings,routes.legs.steps.navigationInstruction,routes.legs.steps.distanceMeters,routes.legs.steps.startLocation,routes.legs.steps.endLocation,routes.legs.steps.polyline.geoJsonLinestring",
             },
             json=body,
             timeout=12,
@@ -114,6 +115,11 @@ def calculate(payload: RealRouteInput, profile: dict | None, uid: str):
                 "instruction": step.get("navigationInstruction", {}).get("instructions", ""),
                 "distanceMeters": step.get("distanceMeters", 0),
                 "start": step["startLocation"]["latLng"],
+                "end": step.get("endLocation", {}).get("latLng"),
+                "geometry": step.get("polyline", {}).get("geoJsonLinestring"),
+                "maneuver": step.get("navigationInstruction", {}).get(
+                    "maneuver", "MANEUVER_UNSPECIFIED"
+                ),
             }
             for leg in route.get("legs", [])
             for step in leg.get("steps", [])

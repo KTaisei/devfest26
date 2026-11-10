@@ -566,6 +566,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/evacuation/advice": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Evacuation Advice */
+    post: operations["evacuation_advice_api_v1_evacuation_advice_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -597,6 +614,11 @@ export interface components {
       origin: components["schemas"]["Location"];
       /** Locationuseconsent */
       locationUseConsent: boolean;
+      /**
+       * Aiuseconsent
+       * @default false
+       */
+      aiUseConsent: boolean;
       /** Locationsharingconsent */
       locationSharingConsent: boolean;
     };
@@ -605,6 +627,11 @@ export interface components {
       origin: components["schemas"]["Location"];
       /** Locationuseconsent */
       locationUseConsent: boolean;
+      /**
+       * Aiuseconsent
+       * @default false
+       */
+      aiUseConsent: boolean;
       /** Locationsharingconsent */
       locationSharingConsent: boolean;
       /**
@@ -637,6 +664,7 @@ export interface components {
        */
       role: "requester" | "helper";
       meetingPoint?: components["schemas"]["PublicMeetingPoint"] | null;
+      decision?: components["schemas"]["DecisionSupport"] | null;
       /**
        * Requesterarrived
        * @default false
@@ -684,6 +712,54 @@ export interface components {
        */
       walkingSpeedMetersPerSecond: number;
     };
+    /** DecisionSupport */
+    DecisionSupport: {
+      /**
+       * Provider
+       * @enum {string}
+       */
+      provider: "gemini" | "rules" | "rules_fallback";
+      /**
+       * Purpose
+       * @enum {string}
+       */
+      purpose: "meeting" | "evacuation";
+      /**
+       * Action
+       * @enum {string}
+       */
+      action:
+        | "compare_approaches"
+        | "check_surroundings"
+        | "check_official_information"
+        | "review_route"
+        | "review_meeting"
+        | "confirm_in_person";
+      /**
+       * Reason
+       * @enum {string}
+       */
+      reason:
+        | "balanced_approaches"
+        | "shorter_total"
+        | "reported_hazard"
+        | "information_unavailable"
+        | "local_notice"
+        | "active_meeting"
+        | "both_confirmed"
+        | "no_local_notice";
+      /**
+       * Requiresreview
+       * @default true
+       */
+      requiresReview: boolean;
+      /**
+       * Safetystatus
+       * @default unverified
+       * @constant
+       */
+      safetyStatus: "unverified";
+    };
     /** EarthquakeFeedOutput */
     EarthquakeFeedOutput: {
       /**
@@ -716,6 +792,24 @@ export interface components {
       publishedAt: string;
       /** Sourceurl */
       sourceUrl: string;
+    };
+    /** EvacuationAdviceInput */
+    EvacuationAdviceInput: {
+      origin: components["schemas"]["Location"];
+      /** Locationuseconsent */
+      locationUseConsent: boolean;
+      /** Aiuseconsent */
+      aiUseConsent: boolean;
+      /**
+       * Shaking
+       * @default false
+       */
+      shaking: boolean;
+      /**
+       * Blocked
+       * @default false
+       */
+      blocked: boolean;
     };
     /** EvacuationRoute */
     EvacuationRoute: {
@@ -1270,6 +1364,13 @@ export interface components {
       /** Distancemeters */
       distanceMeters: number;
       start: components["schemas"]["Location"];
+      end?: components["schemas"]["Location"] | null;
+      geometry?: components["schemas"]["Geometry"] | null;
+      /**
+       * Maneuver
+       * @default MANEUVER_UNSPECIFIED
+       */
+      maneuver: string;
     };
   };
   responses: never;
@@ -2274,6 +2375,39 @@ export interface operations {
         };
         content: {
           "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  evacuation_advice_api_v1_evacuation_advice_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["EvacuationAdviceInput"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DecisionSupport"];
         };
       };
       /** @description Validation Error */

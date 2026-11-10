@@ -407,3 +407,40 @@ def test_google_request_contains_only_coordinates_of_a_public_site(monkeypatch):
         "longitude": SITE.longitude,
     }
     assert "テスト" not in str(captured[0]) and "public-site-fixture" not in str(captured[0])
+
+
+@pytest.mark.parametrize(
+    "requester_consent,helper_consent,expected_ai",
+    [(True, True, True), (True, False, False), (False, True, False)],
+)
+def test_meeting_ai_requires_both_consents_and_shares_only_public_choice(
+    client, live, monkeypatch, requester_consent, helper_consent, expected_ai
+):
+    from app.services import decision_support
+
+    requester_id, requester = identity(client)
+    helper_id, helper = identity(client, helper=True)
+    first = client.post(
+        "/api/v1/assistance/requests",
+        json={**BODY, "aiUseConsent": requester_consent},
+        headers=requester,
+    )
+    assert first.status_code == 201
+    captured = []
+    original = decision_support.meeting
+
+    def choose(options, enabled):
+        captured.append((options, enabled))
+        return original(options, False)
+
+    monkeypatch.setattr(decision_support, "meeting", choose)
+    response = client.post(
+        f"/api/v1/assistance/{first.json()['id']}/accept",
+        json={**BODY, "origin": OTHER, "aiUseConsent": helper_consent},
+        headers=helper,
+    )
+    assert response.status_code == 200, response.text
+    assert captured == [([{"totalSeconds": 200, "maxSeconds": 100}], expected_ai)]
+    assert response.json()["decision"]["safetyStatus"] == "unverified"
+    for private in ["aiUseConsent", requester_id, helper_id, "totalSeconds", "maxSeconds"]:
+        assert private not in response.text

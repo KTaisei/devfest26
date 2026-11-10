@@ -1726,3 +1726,62 @@ a:focus-visible {
   font-size: 12px;
   color: #3455a3;
 }
+
+/* Foreground navigation is a portal so the map sheet cannot clip the map. */
+.turn-navigation {
+  position: fixed;
+  inset: 0;
+  z-index: 20000;
+  background: #f3f5fa;
+}
+.turn-navigation .road-preview-map {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  width: 100%;
+}
+.turn-navigation .map-attribution {
+  display: none;
+}
+.turn-instruction {
+  position: absolute;
+  top: max(12px, env(safe-area-inset-top));
+  left: 12px;
+  right: 62px;
+  border-radius: 18px;
+  padding: 16px;
+  background: #fff;
+  box-shadow: 0 5px 20px #18234a33;
+  max-height: 35vh;
+  overflow: auto;
+}
+.turn-instruction h2 {
+  margin: 8px 0;
+  font-size: 1.3rem;
+}
+.turn-controls {
+  position: absolute;
+  bottom: max(35px, env(safe-area-inset-bottom));
+  left: 8px;
+  right: 8px;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding: 6px;
+  border-radius: 14px;
+  background: #ffffffed;
+}
+.evacuation-advisor {
+  padding: 12px 16px;
+  border-top: 1px solid #ddd;
+}
+.evacuation-advisor label {
+  display: block;
+  margin: 8px 0;
+}
+.navigation-start {
+  border: 1px solid #cbd5e1;
+  border-radius: 14px;
+  padding: 12px;
+  margin: 12px 0;
+}

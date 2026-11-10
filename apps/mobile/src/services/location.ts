@@ -39,3 +39,45 @@ export async function getCurrentLocation() {
     longitude: position.coords.longitude,
   };
 }
+
+/** A watch belongs to one explicit foreground navigation session. */
+export async function watchLocation(
+  onFix: (fix: import("../navigation/progress").Fix) => void,
+  onError: (message: string) => void,
+): Promise<() => void> {
+  if (Capacitor.isNativePlatform()) {
+    const id = await Geolocation.watchPosition(
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
+      (position, error) => {
+        if (error || !position)
+          onError("GPSを更新できません。 / GPS update unavailable.");
+        else
+          onFix({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            accuracy: position.coords.accuracy,
+            timestamp: position.timestamp,
+          });
+      },
+    );
+    return () => {
+      void Geolocation.clearWatch({ id });
+    };
+  }
+  if (!navigator.geolocation) throw new Error("Geolocation unavailable");
+  const id = navigator.geolocation.watchPosition(
+    (position) =>
+      onFix({
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+        accuracy: position.coords.accuracy,
+        timestamp: position.timestamp,
+      }),
+    () =>
+      onError(
+        "GPSの許可・受信状態を確認してください。 / Check GPS permission and reception.",
+      ),
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
+  );
+  return () => navigator.geolocation.clearWatch(id);
+}

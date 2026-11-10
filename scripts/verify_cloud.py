@@ -27,10 +27,15 @@ def main():
         action="store_true",
         help="Check P2P/GSI and route comparison using fixed public points, without creating support requests",
     )
+    parser.add_argument(
+        "--decision-support",
+        action="store_true",
+        help="Check bounded Gemini advice with a disposable identity and public point",
+    )
     args = parser.parse_args()
     if args.deployed and args.project != "tasuku-77c63":
         parser.error("The deployed check only targets tasuku-77c63")
-    if (args.real_roads or args.live_data) and not args.deployed:
+    if (args.real_roads or args.live_data or args.decision_support) and not args.deployed:
         parser.error("--real-roads requires --deployed")
     root = Path(__file__).resolve().parents[1]
     backend = dotenv_values(root / "backend/.env.cloud")
@@ -183,6 +188,10 @@ def main():
                     )
                     assert compared.json()["comparedSites"] == 3
                     assert compared.json()["route"]["accessibility"] == "unverified"
+                    steps = compared.json()["route"]["steps"]
+                    assert (
+                        steps and steps[0]["end"] and steps[0]["geometry"]["type"] == "LineString"
+                    )
                     assert client.get("/api/v1/assistance/mine", headers=headers).json() == []
                     denied = client.post(
                         "/api/v1/assistance/requests",
@@ -192,6 +201,42 @@ def main():
                     assert denied.status_code == 422
                     print(
                         "PASS: deployed P2P local-area filter, actual GSI sites and three walking route comparison; no support requests created"
+                    )
+                if args.decision_support:
+                    body = {
+                        "origin": {"latitude": 34.4884, "longitude": 133.3614},
+                        "locationUseConsent": True,
+                        "aiUseConsent": True,
+                    }
+                    denied = client.post(
+                        "/api/v1/evacuation/advice",
+                        headers=headers,
+                        json={**body, "aiUseConsent": False},
+                    )
+                    assert denied.status_code == 422
+                    for hazard in (False, True):
+                        response = client.post(
+                            "/api/v1/evacuation/advice",
+                            headers=headers,
+                            json={**body, "blocked": hazard},
+                        )
+                        assert response.status_code == 200, (
+                            f"Decision support status {response.status_code}"
+                        )
+                        result = response.json()
+                        assert (
+                            result["provider"] == "gemini"
+                            and result["safetyStatus"] == "unverified"
+                        )
+                        assert result["requiresReview"]
+                        if hazard:
+                            assert result["action"] == "check_surroundings"
+                        assert (
+                            "latitude" not in response.text
+                            and account["localId"] not in response.text
+                        )
+                    print(
+                        "PASS: bounded Vertex Gemini advice, consent rejection and reported-hazard guardrail; no user coordinates sent to Gemini"
                     )
     finally:
         if account:

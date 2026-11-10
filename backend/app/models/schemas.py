@@ -83,6 +83,9 @@ class WalkingStep(BaseModel):
     instruction: str
     distanceMeters: int
     start: Location
+    end: Location | None = None
+    geometry: Geometry | None = None
+    maneuver: str = "MANEUVER_UNSPECIFIED"
 
 
 class RealRouteOutput(BaseModel):
@@ -174,6 +177,7 @@ class ShelterRecommendation(BaseModel):
 
 
 class AssistanceConsentInput(LocalDataInput):
+    aiUseConsent: bool = False
     locationSharingConsent: bool
 
 
@@ -197,12 +201,44 @@ class PublicMeetingPoint(Location):
     accessibility: Literal["unverified"] = "unverified"
 
 
+class DecisionSupport(BaseModel):
+    provider: Literal["gemini", "rules", "rules_fallback"]
+    purpose: Literal["meeting", "evacuation"]
+    action: Literal[
+        "compare_approaches",
+        "check_surroundings",
+        "check_official_information",
+        "review_route",
+        "review_meeting",
+        "confirm_in_person",
+    ]
+    reason: Literal[
+        "balanced_approaches",
+        "shorter_total",
+        "reported_hazard",
+        "information_unavailable",
+        "local_notice",
+        "active_meeting",
+        "both_confirmed",
+        "no_local_notice",
+    ]
+    requiresReview: bool = True
+    safetyStatus: Literal["unverified"] = "unverified"
+
+
+class EvacuationAdviceInput(LocalDataInput):
+    aiUseConsent: bool
+    shaking: bool = False
+    blocked: bool = False
+
+
 class AssistanceOutput(BaseModel):
     id: str
     status: Literal["waiting", "accepted", "met", "completed", "cancelled", "expired"]
     supportType: Support
     role: Literal["requester", "helper"]
     meetingPoint: PublicMeetingPoint | None = None
+    decision: DecisionSupport | None = None
     requesterArrived: bool = False
     helperArrived: bool = False
     expiresAt: str

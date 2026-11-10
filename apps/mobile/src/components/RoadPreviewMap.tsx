@@ -11,6 +11,7 @@ export function RoadPreviewMap({
   en = false,
   sites = [],
   onSiteSelect,
+  followPosition = false,
 }: {
   origin?: Location;
   destination?: Location;
@@ -19,6 +20,7 @@ export function RoadPreviewMap({
   en?: boolean;
   sites?: (Location & { id: string; name: string })[];
   onSiteSelect?: (id: string) => void;
+  followPosition?: boolean;
 }) {
   const container = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<google.maps.Map>();
@@ -126,18 +128,31 @@ export function RoadPreviewMap({
       );
       const bounds = new google.maps.LatLngBounds();
       path.forEach((p) => bounds.extend(p));
-      map.fitBounds(
-        bounds,
-        window.innerWidth >= 900
-          ? { top: 130, bottom: 50, left: 490, right: 45 }
-          : { top: 125, bottom: 170, left: 35, right: 35 },
-      );
+      if (followPosition && origin) {
+        map.panTo(point(origin));
+        map.setZoom(18);
+      } else
+        map.fitBounds(
+          bounds,
+          window.innerWidth >= 900
+            ? { top: 130, bottom: 50, left: 490, right: 45 }
+            : { top: 125, bottom: 170, left: 35, right: 35 },
+        );
     } else if (origin) {
       map.panTo(point(origin));
       map.setZoom(15);
     }
     return () => overlays.forEach((item) => item.setMap(null));
-  }, [map, origin, destination, geometry, en, sites, onSiteSelect]);
+  }, [
+    map,
+    origin,
+    destination,
+    geometry,
+    en,
+    sites,
+    onSiteSelect,
+    followPosition,
+  ]);
   return (
     <>
       {(!key || failed) && (

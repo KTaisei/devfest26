@@ -3,9 +3,10 @@ import logging
 from contextlib import asynccontextmanager, suppress
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from .api.routes import router
 from .core.config import settings
-from .core.store import initialize_store
+from .core.store import initialize_store, StoreBusy
 from .core.firebase import initialize_firebase
 from .services.retention import purge_expired_locations
 from .services.matching_engine import expire_offers
@@ -45,3 +46,12 @@ app.add_middleware(
     allow_headers=["Authorization", "Content-Type"],
 )
 app.include_router(router)
+
+
+@app.exception_handler(StoreBusy)
+async def store_busy_handler(request, exc):
+    return JSONResponse(
+        status_code=503,
+        headers={"Retry-After": "1"},
+        content={"detail": "Storage is busy. Refresh and try again.", "code": "store_busy"},
+    )

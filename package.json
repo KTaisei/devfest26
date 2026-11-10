@@ -24,7 +24,8 @@
     "api:export": "node scripts/backend.mjs export",
     "dev:api:cloud": "node scripts/backend.mjs dev-cloud",
     "dev:cloud": "npm run dev -w apps/mobile -- --mode cloud",
-    "verify:cloud": "node scripts/backend.mjs verify-cloud"
+    "verify:cloud": "node scripts/backend.mjs verify-cloud",
+    "test:navigation": "node --test tests/navigation.test.mjs"
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^4.0.1",

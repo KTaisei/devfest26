@@ -5,6 +5,8 @@ Only the API uses this repository. Never expose server credentials to the mobile
 
 from copy import deepcopy
 from threading import RLock
+from random import uniform
+from time import sleep
 from typing import Callable, TypeVar
 from .config import settings
 
@@ -67,6 +69,10 @@ class FirestoreView:
             ref.delete()
 
 
+class StoreBusy(Exception):
+    """A transaction exhausted contention retries; no private context exposed."""
+
+
 class FirestoreStore(FirestoreView):
     def __init__(self):
         from firebase_admin import firestore
@@ -80,7 +86,20 @@ class FirestoreStore(FirestoreView):
         def run(transaction):
             return callback(FirestoreView(self.db, transaction))
 
-        return run(self.db.transaction())
+        from google.api_core.exceptions import Aborted
+
+        # The emulator (and a hot production document) can abort both writers
+        # in lockstep. Restart with a fresh transaction and jitter once, without
+        # retrying business errors or repeating external provider calls.
+        for attempt in range(2):
+            try:
+                return run(self.db.transaction(max_attempts=3))
+            except (Aborted, ValueError) as exc:
+                if not isinstance(exc, Aborted) and not isinstance(exc.__cause__, Aborted):
+                    raise
+                if attempt:
+                    raise StoreBusy() from None
+                sleep(uniform(0.05, 0.5))
 
 
 store = MemoryStore()

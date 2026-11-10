@@ -3,6 +3,13 @@ import { api } from "./api";
 import type { components } from "../types/api.generated";
 type Schema = components["schemas"];
 export const realData = {
+  async advice(input: Schema["EvacuationAdviceInput"]) {
+    return (
+      await api.post<Schema["DecisionSupport"]>("/evacuation/advice", input, {
+        timeout: 45000,
+      })
+    ).data;
+  },
   async walking(input: Schema["RealRouteInput"]) {
     return (
       await api.post<Schema["RealRouteOutput"]>(

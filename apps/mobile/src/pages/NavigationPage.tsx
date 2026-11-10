@@ -3,6 +3,8 @@ import { IonButton } from "@ionic/react";
 import { useMutation } from "@tanstack/react-query";
 import { Link, useLocation } from "react-router-dom";
 import { Layout, ErrorNotice } from "../components/Layout";
+import { TurnByTurnNavigator } from "../components/TurnByTurnNavigator";
+import { EvacuationAdvisor } from "../components/EvacuationAdvisor";
 import { RoadPreviewMap } from "../components/RoadPreviewMap";
 import { realData } from "../services/realData";
 import { getCurrentLocation } from "../services/location";
@@ -268,6 +270,7 @@ export function NavigationPage() {
           )}
           {expanded && (
             <div className="map-sheet-content">
+              {origin && <EvacuationAdvisor origin={origin} en={en} />}
               <p className="map-privacy">
                 {en
                   ? "Location is read only when you tap Agree. It is sent to TASUKU/Google for map display and to GSI for area lookup. It is not shared with other users. P2PQuake receives no GPS. Routes require separate consent below."
@@ -548,6 +551,20 @@ export function NavigationPage() {
                   <ErrorNotice error={route.error} />
                   {result && (
                     <div className="real-route-result">
+                      {active && destination && (
+                        <TurnByTurnNavigator
+                          route={result}
+                          destination={destination}
+                          en={en}
+                          recalculate={(point) =>
+                            realData.walking({
+                              origin: point,
+                              destination,
+                              locationUseConsent: true,
+                            })
+                          }
+                        />
+                      )}
                       <h2>
                         {result.distanceMeters} m ·{" "}
                         {Math.ceil(result.personalEstimatedSeconds / 60)}

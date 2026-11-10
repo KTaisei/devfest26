@@ -1,6 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { IonButton, IonSelect, IonSelectOption } from "@ionic/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useLocation } from "react-router-dom";
+import { TurnByTurnNavigator } from "../components/TurnByTurnNavigator";
+import { DecisionNotice } from "../components/DecisionNotice";
 import { Layout, ErrorNotice } from "../components/Layout";
 import { RoadPreviewMap } from "../components/RoadPreviewMap";
 import { getCurrentLocation } from "../services/location";
@@ -11,7 +14,6 @@ import type { Location, SupportType } from "../types/domain";
 import type { components } from "../types/api.generated";
 
 type Assistance = components["schemas"]["AssistanceOutput"];
-type Candidate = components["schemas"]["AssistanceCandidate"];
 const statusLabel = (status: Assistance["status"], en: boolean) =>
   ({
     waiting: en ? "Waiting for a volunteer" : "支援者の承諾待ち",
@@ -31,13 +33,26 @@ export function AssistancePage({ helper = false }: { helper?: boolean }) {
   const [consent, setConsent] = useState(false);
   const [metConfirmed, setMetConfirmed] = useState(false);
   const [supportType, setSupportType] = useState<SupportType>("navigation");
-  const [candidates, setCandidates] = useState<Candidate[]>([]);
-  const [searched, setSearched] = useState(false);
+  const [aiConsent, setAiConsent] = useState(false);
+  const [now, setNow] = useState(Date.now());
+  const active = useLocation().pathname === (helper ? "/helper" : "/support");
+  useEffect(() => {
+    if (!active) {
+      setPoint(undefined);
+      setConsent(false);
+      setAcquiredAt(0);
+      return;
+    }
+    const id = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, [active]);
   const [lastStatus, setLastStatus] = useState("");
   const mine = useQuery({
     queryKey: ["real-assistance"],
     queryFn: realData.mine,
-    refetchInterval: 5000,
+    refetchInterval: 3000,
+    enabled: active,
+    gcTime: 0,
   });
   const current = mine.data?.[0];
   const gps = useMutation({
@@ -46,8 +61,6 @@ export function AssistancePage({ helper = false }: { helper?: boolean }) {
       setPoint(value);
       setAcquiredAt(Date.now());
       setConsent(false);
-      setCandidates([]);
-      setSearched(false);
       if (current?.status === "waiting" && current.role === "requester") {
         await realData.updatePosition(current.id, {
           origin: value,
@@ -59,14 +72,13 @@ export function AssistancePage({ helper = false }: { helper?: boolean }) {
   const ready = Boolean(
     point &&
     consent &&
-    Date.now() - acquiredAt < 300000 &&
+    now - acquiredAt < 300000 &&
     profile?.locationSharingEnabled,
   );
   async function refresh() {
-    setCandidates([]);
-    setSearched(false);
     setMetConfirmed(false);
     await client.invalidateQueries({ queryKey: ["real-assistance"] });
+    await client.invalidateQueries({ queryKey: ["nearby-real-assistance"] });
   }
   const create = useMutation({
     mutationFn: () =>
@@ -75,23 +87,33 @@ export function AssistancePage({ helper = false }: { helper?: boolean }) {
         locationUseConsent: consent,
         locationSharingConsent: consent,
         supportType,
+        aiUseConsent: aiConsent,
       }),
     onSuccess: refresh,
   });
-  const search = useMutation({
-    mutationFn: () =>
-      realData.discover({ origin: point!, locationUseConsent: consent }),
-    onSuccess: (values) => {
-      setCandidates(values);
-      setSearched(true);
-    },
+  const search = useQuery({
+    queryKey: ["nearby-real-assistance", point],
+    enabled:
+      active &&
+      helper &&
+      ready &&
+      Boolean(profile?.isAvailableToHelp) &&
+      !current,
+    queryFn: () =>
+      realData.discover({ origin: point!, locationUseConsent: true }),
+    refetchInterval: 5000,
+    gcTime: 0,
+    retry: false,
   });
+  const candidates = ready && !current ? (search.data ?? []) : [];
+  const searched = search.data !== undefined;
   const accept = useMutation({
     mutationFn: (id: string) =>
       realData.accept(id, {
         origin: point!,
         locationUseConsent: consent,
         locationSharingConsent: consent,
+        aiUseConsent: aiConsent,
       }),
     onSuccess: refresh,
   });
@@ -189,6 +211,16 @@ export function AssistancePage({ helper = false }: { helper?: boolean }) {
               : "プロフィールの支援受付を有効にしてください。"}
           </p>
         )}
+        <label className="navigation-consent">
+          <input
+            type="checkbox"
+            checked={aiConsent}
+            onChange={(e) => setAiConsent(e.target.checked)}
+          />
+          {en
+            ? "Allow Gemini to compare verified public meeting candidates using anonymous aggregate walking times. No GPS or identity is sent. Both people must opt in; otherwise fixed rules select the point."
+            : "匿名化した合計・最長の徒歩所要時間だけをGeminiに送り、確認済みの公開合流候補を比較することに同意します。GPS・識別情報は送りません。双方の同意がない場合は固定ルールで選びます。"}
+        </label>
       </section>
       <ErrorNotice error={mine.error} />
       {lastStatus && <p role="status">{lastStatus}</p>}
@@ -203,6 +235,9 @@ export function AssistancePage({ helper = false }: { helper?: boolean }) {
           {current.meetingPoint && (
             <>
               <h3>{current.meetingPoint.name}</h3>
+              {current.decision && (
+                <DecisionNotice value={current.decision} en={en} />
+              )}
               <p>{current.meetingPoint.address}</p>
               {current.meetingPoint.remarks && (
                 <p>{current.meetingPoint.remarks}</p>
@@ -217,8 +252,8 @@ export function AssistancePage({ helper = false }: { helper?: boolean }) {
               />
               <p>
                 {en
-                  ? "The point minimises total straight-line approach distance among nearby public earthquake sites; both ordinary walking routes were checked. It is not a verified entrance or a safest/shortest evacuation route."
-                  : "周辺の地震対応指定緊急避難場所から、双方の直線移動距離の合計が短い地点を選び、両者の通常徒歩経路を確認しています。入口や最短・安全な避難経路を保証するものではありません。"}
+                  ? "Nearby public meeting candidates are checked with both walking approaches. With both consents, Gemini compares aggregate travel times; otherwise fixed rules select the point. It is not a verified entrance or a safest/shortest evacuation route."
+                  : "周辺の公開候補について双方の通常徒歩経路を確認しています。双方が同意した場合はGeminiが匿名の所要時間で比較し、同意がない場合は固定ルールで選びます。入口や最短・安全な避難経路を保証するものではありません。"}
               </p>
               <a
                 href="https://maps.gsi.go.jp/development/ichiran.html#skhb"
@@ -238,6 +273,19 @@ export function AssistancePage({ helper = false }: { helper?: boolean }) {
               <ErrorNotice error={directions.error} />
               {ownRoute && (
                 <>
+                  {active && (
+                    <TurnByTurnNavigator
+                      route={ownRoute}
+                      destination={current.meetingPoint}
+                      en={en}
+                      recalculate={(point) =>
+                        realData.directions(current.id, {
+                          origin: point,
+                          locationUseConsent: true,
+                        })
+                      }
+                    />
+                  )}
                   <h3>
                     {ownRoute.distanceMeters}m ·{" "}
                     {Math.ceil(ownRoute.personalEstimatedSeconds / 60)}
@@ -323,14 +371,19 @@ export function AssistancePage({ helper = false }: { helper?: boolean }) {
                   ? "Only requests matching your capabilities/language are listed. Exact positions are private; acceptance shares a public meeting point."
                   : "対応能力・言語が合う依頼を表示します。正確な位置は非公開です。承諾すると共通の公開合流地点を表示します。"}
               </p>
-              <IonButton
-                disabled={
-                  !ready || !profile?.isAvailableToHelp || search.isPending
-                }
-                onClick={() => search.mutate()}
-              >
-                {en ? "Find nearby requests" : "近くの依頼を探す"}
-              </IonButton>
+              <p role="status">
+                {!ready
+                  ? en
+                    ? "Agree and acquire fresh GPS to start automatic updates."
+                    : "GPS取得と同意後、自動で更新します。"
+                  : search.isFetching && !searched
+                    ? en
+                      ? "Checking nearby requests…"
+                      : "周辺の依頼を取得中…"
+                    : en
+                      ? "Automatically updates every 5 seconds. No page reload needed."
+                      : "5秒ごとに自動更新中。ページの再読み込みは不要です。"}
+              </p>
               <ErrorNotice error={search.error} />
               {searched && !candidates.length && (
                 <p>
@@ -347,7 +400,9 @@ export function AssistancePage({ helper = false }: { helper?: boolean }) {
                     {c.language === "ja" ? "日本語" : "English"}
                   </p>
                   <IonButton
-                    disabled={!ready || accept.isPending}
+                    disabled={
+                      !ready || accept.isPending || Boolean(search.error)
+                    }
                     onClick={() => accept.mutate(c.id)}
                   >
                     {accept.isPending
