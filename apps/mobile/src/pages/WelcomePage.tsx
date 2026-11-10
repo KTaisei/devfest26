@@ -8,31 +8,31 @@ const sections = [
   {
     ja: {
       title: "TASUKUとは",
-      body: "「知らない街でも、ひとりにしない。」災害時の避難経路と、近くにいる人同士の助け合いを体験できるシミュレーションです。あなたの移動の制約（車いす・階段回避など）に合った経路と支援のつながりを探します。",
+      body: "「知らない街でも、ひとりにしない。」実GPS・実道路・公開避難場所・P2P地震情報を使い、近くの人との助け合いを試すアプリです。言語と時間目安を調整できますが、階段回避・車いす対応の経路は未検証です。",
     },
     en: {
       title: "What is TASUKU?",
-      body: "“Never alone, even in an unfamiliar city.” TASUKU is a simulation of evacuation routes and mutual support between people nearby. It finds routes and support that respect your mobility needs, such as wheelchair use or avoiding stairs.",
+      body: "“Never alone, even in an unfamiliar city.” TASUKU uses actual GPS, roads, public earthquake sites and P2PQuake information to trial nearby assistance. Language and time estimates adapt to your profile; stair avoidance and wheelchair routes are unverified.",
     },
   },
   {
     ja: {
       title: "これは訓練です",
-      body: "表示される道路・避難場所・災害情報はすべて架空の模擬データです。実際の避難判断には使用できません。実際の災害時は、自治体や公式の情報を確認してください。",
+      body: "通常画面は実データを使う試験版です。道路の被災・避難場所の開設・入口・移動条件への適合・警報の配信品質は未確認です。安全な避難経路としては使用できません。旧架空データの訓練は別画面です。",
     },
     en: {
       title: "This is a drill",
-      body: "Every road, shelter, and disaster update shown here is fictional simulation data. Never use it for a real evacuation decision. In a real disaster, follow official information from your municipality.",
+      body: "The main screens trial real data. Road damage, site opening, entrances, accessibility and alert delivery are unverified. Do not treat these routes as verified safe evacuation guidance. The earlier fictional simulation is separate.",
     },
   },
   {
     ja: {
       title: "位置情報について",
-      body: "位置の共有は任意で、あなたが明示的に同意したときだけ行われます。共有した位置は30分でマッチングに使えなくなり、期限切れデータを順次削除します。当事者の正確な現在地は他の参加者に表示せず、承諾後は選ばれた模擬合流地点を両者に共有します。",
+      body: "位置の共有は任意で、あなたが明示的に同意したときだけ行われます。共有した位置は30分でマッチングに使えなくなり、期限切れデータを順次削除します。当事者の正確な現在地は他の参加者に表示せず、承諾後は選ばれた実在する公開合流地点を両者に共有します。",
     },
     en: {
       title: "About your location",
-      body: "Location sharing is optional and happens only with your explicit consent. A shared location becomes unavailable for matching after 30 minutes, then expired data is deleted asynchronously. Your exact current position is not shown to other participants. Once accepted, both participants see the selected fictional meeting point.",
+      body: "Location sharing is optional and happens only with your explicit consent. A shared location becomes unavailable for matching after 30 minutes, then expired data is deleted asynchronously. Your exact current position is not shown to other participants. Once accepted, both participants see the selected real public meeting point.",
     },
   },
   {
@@ -56,13 +56,14 @@ export function WelcomePage() {
   };
   return (
     <Layout
+      dataMode="real_preview"
       title={en ? "Welcome to TASUKU" : "はじめに"}
       eyebrow="BEFORE YOU START"
     >
       <p className="intro">
         {en
-          ? "A one-minute guide before your first simulation."
-          : "最初のシミュレーションの前に、1分だけ案内します。"}
+          ? "A one-minute guide before using location and assistance."
+          : "現在地と支援を使う前に、1分だけ案内します。"}
       </p>
       <div className="two-columns">
         {sections.map((section) => {

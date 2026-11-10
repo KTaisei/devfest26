@@ -87,6 +87,468 @@
         ]
       }
     },
+    "/api/v1/earthquakes/local": {
+      "post": {
+        "summary": "Local Earthquakes",
+        "operationId": "local_earthquakes_api_v1_earthquakes_local_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LocalDataInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LocalEarthquakeFeed"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/shelters/nearby": {
+      "post": {
+        "summary": "Real Shelters",
+        "operationId": "real_shelters_api_v1_shelters_nearby_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LocalDataInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RealShelterFeed"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/shelters/recommend": {
+      "post": {
+        "summary": "Recommend Real Shelter",
+        "operationId": "recommend_real_shelter_api_v1_shelters_recommend_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LocalDataInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShelterRecommendation"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/assistance/requests": {
+      "post": {
+        "summary": "Request Assistance",
+        "operationId": "request_assistance_api_v1_assistance_requests_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssistanceInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssistanceOutput"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/assistance/nearby": {
+      "post": {
+        "summary": "Nearby Assistance",
+        "operationId": "nearby_assistance_api_v1_assistance_nearby_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LocalDataInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AssistanceCandidate"
+                  },
+                  "type": "array",
+                  "title": "Response Nearby Assistance Api V1 Assistance Nearby Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/assistance/mine": {
+      "get": {
+        "summary": "My Assistance",
+        "operationId": "my_assistance_api_v1_assistance_mine_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AssistanceOutput"
+                  },
+                  "type": "array",
+                  "title": "Response My Assistance Api V1 Assistance Mine Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/assistance/{request_id}/location": {
+      "post": {
+        "summary": "Update Assistance Location",
+        "operationId": "update_assistance_location_api_v1_assistance__request_id__location_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Request Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LocalDataInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssistanceOutput"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/assistance/{request_id}/accept": {
+      "post": {
+        "summary": "Accept Assistance",
+        "operationId": "accept_assistance_api_v1_assistance__request_id__accept_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Request Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssistanceConsentInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssistanceOutput"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/assistance/{request_id}/route": {
+      "post": {
+        "summary": "Assistance Route",
+        "operationId": "assistance_route_api_v1_assistance__request_id__route_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Request Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LocalDataInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RealRouteOutput"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/assistance/{request_id}/progress": {
+      "post": {
+        "summary": "Assistance Progress",
+        "operationId": "assistance_progress_api_v1_assistance__request_id__progress_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Request Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssistanceProgress"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssistanceOutput"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/matches/{match_id}/route": {
       "post": {
         "summary": "Meeting Route",
@@ -885,6 +1347,212 @@
   },
   "components": {
     "schemas": {
+      "AssistanceCandidate": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "supportType": {
+            "type": "string",
+            "enum": [
+              "navigation",
+              "translation",
+              "information",
+              "walking_companion"
+            ],
+            "title": "Supporttype"
+          },
+          "language": {
+            "type": "string",
+            "enum": [
+              "ja",
+              "en"
+            ],
+            "title": "Language"
+          },
+          "proximity": {
+            "type": "string",
+            "const": "within_2km",
+            "title": "Proximity",
+            "default": "within_2km"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "supportType",
+          "language"
+        ],
+        "title": "AssistanceCandidate"
+      },
+      "AssistanceConsentInput": {
+        "properties": {
+          "origin": {
+            "$ref": "#/components/schemas/Location"
+          },
+          "locationUseConsent": {
+            "type": "boolean",
+            "title": "Locationuseconsent"
+          },
+          "locationSharingConsent": {
+            "type": "boolean",
+            "title": "Locationsharingconsent"
+          }
+        },
+        "type": "object",
+        "required": [
+          "origin",
+          "locationUseConsent",
+          "locationSharingConsent"
+        ],
+        "title": "AssistanceConsentInput"
+      },
+      "AssistanceInput": {
+        "properties": {
+          "origin": {
+            "$ref": "#/components/schemas/Location"
+          },
+          "locationUseConsent": {
+            "type": "boolean",
+            "title": "Locationuseconsent"
+          },
+          "locationSharingConsent": {
+            "type": "boolean",
+            "title": "Locationsharingconsent"
+          },
+          "supportType": {
+            "type": "string",
+            "enum": [
+              "navigation",
+              "translation",
+              "information",
+              "walking_companion"
+            ],
+            "title": "Supporttype",
+            "default": "navigation"
+          }
+        },
+        "type": "object",
+        "required": [
+          "origin",
+          "locationUseConsent",
+          "locationSharingConsent"
+        ],
+        "title": "AssistanceInput"
+      },
+      "AssistanceOutput": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "waiting",
+              "accepted",
+              "met",
+              "completed",
+              "cancelled",
+              "expired"
+            ],
+            "title": "Status"
+          },
+          "supportType": {
+            "type": "string",
+            "enum": [
+              "navigation",
+              "translation",
+              "information",
+              "walking_companion"
+            ],
+            "title": "Supporttype"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "requester",
+              "helper"
+            ],
+            "title": "Role"
+          },
+          "meetingPoint": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PublicMeetingPoint"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "requesterArrived": {
+            "type": "boolean",
+            "title": "Requesterarrived",
+            "default": false
+          },
+          "helperArrived": {
+            "type": "boolean",
+            "title": "Helperarrived",
+            "default": false
+          },
+          "expiresAt": {
+            "type": "string",
+            "title": "Expiresat"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "supportType",
+          "role",
+          "expiresAt",
+          "warnings"
+        ],
+        "title": "AssistanceOutput"
+      },
+      "AssistanceProgress": {
+        "properties": {
+          "origin": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Location"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "locationUseConsent": {
+            "type": "boolean",
+            "title": "Locationuseconsent",
+            "default": false
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "arrive",
+              "complete",
+              "cancel"
+            ],
+            "title": "Action"
+          }
+        },
+        "type": "object",
+        "required": [
+          "action"
+        ],
+        "title": "AssistanceProgress"
+      },
       "Constraints": {
         "properties": {
           "avoidStairs": {
@@ -1082,6 +1750,140 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "LocalDataInput": {
+        "properties": {
+          "origin": {
+            "$ref": "#/components/schemas/Location"
+          },
+          "locationUseConsent": {
+            "type": "boolean",
+            "title": "Locationuseconsent"
+          }
+        },
+        "type": "object",
+        "required": [
+          "origin",
+          "locationUseConsent"
+        ],
+        "title": "LocalDataInput"
+      },
+      "LocalEarthquakeFeed": {
+        "properties": {
+          "provider": {
+            "type": "string",
+            "const": "p2pquake",
+            "title": "Provider",
+            "default": "p2pquake"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "available",
+              "unavailable",
+              "area_unknown"
+            ],
+            "title": "Status"
+          },
+          "area": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Area"
+          },
+          "municipality": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Municipality"
+          },
+          "fetchedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fetchedat"
+          },
+          "notices": {
+            "items": {
+              "$ref": "#/components/schemas/LocalEarthquakeNotice"
+            },
+            "type": "array",
+            "title": "Notices"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "notices"
+        ],
+        "title": "LocalEarthquakeFeed"
+      },
+      "LocalEarthquakeNotice": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "code": {
+            "type": "integer",
+            "enum": [
+              551,
+              556
+            ],
+            "title": "Code"
+          },
+          "eventId": {
+            "type": "string",
+            "title": "Eventid"
+          },
+          "issuedAt": {
+            "type": "string",
+            "title": "Issuedat"
+          },
+          "area": {
+            "type": "string",
+            "title": "Area"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "hypocenter": {
+            "type": "string",
+            "title": "Hypocenter"
+          },
+          "scale": {
+            "type": "number",
+            "title": "Scale"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "code",
+          "eventId",
+          "issuedAt",
+          "area",
+          "title",
+          "hypocenter",
+          "scale"
+        ],
+        "title": "LocalEarthquakeNotice"
       },
       "Location": {
         "properties": {
@@ -1446,6 +2248,60 @@
         ],
         "title": "ProgressInput"
       },
+      "PublicMeetingPoint": {
+        "properties": {
+          "latitude": {
+            "type": "number",
+            "maximum": 90.0,
+            "minimum": -90.0,
+            "title": "Latitude"
+          },
+          "longitude": {
+            "type": "number",
+            "maximum": 180.0,
+            "minimum": -180.0,
+            "title": "Longitude"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "address": {
+            "type": "string",
+            "title": "Address"
+          },
+          "remarks": {
+            "type": "string",
+            "title": "Remarks"
+          },
+          "openingStatus": {
+            "type": "string",
+            "const": "unverified",
+            "title": "Openingstatus",
+            "default": "unverified"
+          },
+          "accessibility": {
+            "type": "string",
+            "const": "unverified",
+            "title": "Accessibility",
+            "default": "unverified"
+          }
+        },
+        "type": "object",
+        "required": [
+          "latitude",
+          "longitude",
+          "id",
+          "name",
+          "address",
+          "remarks"
+        ],
+        "title": "PublicMeetingPoint"
+      },
       "RealRouteInput": {
         "properties": {
           "origin": {
@@ -1537,6 +2393,107 @@
           "checkedAt"
         ],
         "title": "RealRouteOutput"
+      },
+      "RealShelter": {
+        "properties": {
+          "latitude": {
+            "type": "number",
+            "maximum": 90.0,
+            "minimum": -90.0,
+            "title": "Latitude"
+          },
+          "longitude": {
+            "type": "number",
+            "maximum": 180.0,
+            "minimum": -180.0,
+            "title": "Longitude"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "address": {
+            "type": "string",
+            "title": "Address"
+          },
+          "remarks": {
+            "type": "string",
+            "title": "Remarks"
+          },
+          "distanceMeters": {
+            "type": "integer",
+            "title": "Distancemeters"
+          },
+          "openingStatus": {
+            "type": "string",
+            "const": "unverified",
+            "title": "Openingstatus",
+            "default": "unverified"
+          },
+          "accessibility": {
+            "type": "string",
+            "const": "unverified",
+            "title": "Accessibility",
+            "default": "unverified"
+          }
+        },
+        "type": "object",
+        "required": [
+          "latitude",
+          "longitude",
+          "id",
+          "name",
+          "address",
+          "remarks",
+          "distanceMeters"
+        ],
+        "title": "RealShelter"
+      },
+      "RealShelterFeed": {
+        "properties": {
+          "provider": {
+            "type": "string",
+            "const": "gsi",
+            "title": "Provider",
+            "default": "gsi"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "available",
+              "unavailable"
+            ],
+            "title": "Status"
+          },
+          "fetchedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fetchedat"
+          },
+          "sites": {
+            "items": {
+              "$ref": "#/components/schemas/RealShelter"
+            },
+            "type": "array",
+            "title": "Sites"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "sites"
+        ],
+        "title": "RealShelterFeed"
       },
       "RecommendInput": {
         "properties": {
@@ -1769,6 +2726,38 @@
           "snappedNodeId"
         ],
         "title": "RouteOutput"
+      },
+      "ShelterRecommendation": {
+        "properties": {
+          "site": {
+            "$ref": "#/components/schemas/RealShelter"
+          },
+          "route": {
+            "$ref": "#/components/schemas/RealRouteOutput"
+          },
+          "comparedSites": {
+            "type": "integer",
+            "title": "Comparedsites"
+          },
+          "reachableSites": {
+            "type": "integer",
+            "title": "Reachablesites"
+          },
+          "selectionBasis": {
+            "type": "string",
+            "const": "shortest_walking_distance_among_nearby_three",
+            "title": "Selectionbasis",
+            "default": "shortest_walking_distance_among_nearby_three"
+          }
+        },
+        "type": "object",
+        "required": [
+          "site",
+          "route",
+          "comparedSites",
+          "reachableSites"
+        ],
+        "title": "ShelterRecommendation"
       },
       "TranslationInput": {
         "properties": {

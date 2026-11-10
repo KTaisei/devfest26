@@ -9,12 +9,16 @@ export function RoadPreviewMap({
   geometry,
   onSelect,
   en = false,
+  sites = [],
+  onSiteSelect,
 }: {
   origin?: Location;
   destination?: Location;
   geometry?: Geometry;
   onSelect?: (point: Location) => void;
   en?: boolean;
+  sites?: (Location & { id: string; name: string })[];
+  onSiteSelect?: (id: string) => void;
 }) {
   const container = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<google.maps.Map>();
@@ -29,9 +33,12 @@ export function RoadPreviewMap({
           if (active && container.current)
             setMap(
               new google.maps.Map(container.current, {
-                center: { lat: 34.4884, lng: 133.3614 },
-                zoom: 15,
+                center: { lat: 36, lng: 138 },
+                zoom: 5,
                 zoomControl: true,
+                zoomControlOptions: {
+                  position: google.maps.ControlPosition.RIGHT_TOP,
+                },
                 disableDefaultUI: true,
                 clickableIcons: false,
               }),
@@ -83,6 +90,30 @@ export function RoadPreviewMap({
           }),
         );
     }
+    for (const site of sites) {
+      const marker = new google.maps.Marker({
+        map,
+        position: point(site),
+        label: { text: "避", color: "white", fontWeight: "700" },
+        title: site.name,
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          fillColor: "#147d69",
+          fillOpacity: 1,
+          strokeColor: "white",
+          strokeWeight: 2,
+          scale: 17,
+        },
+      });
+      const listener = marker.addListener("click", () =>
+        onSiteSelect?.(site.id),
+      );
+      // Clear listeners when the site set changes.
+      marker.addListener("map_changed", () => {
+        if (!marker.getMap()) listener.remove();
+      });
+      overlays.push(marker);
+    }
     if (geometry?.coordinates?.length) {
       const path = geometry.coordinates.map(([lng, lat]) => ({ lat, lng }));
       overlays.push(
@@ -95,10 +126,18 @@ export function RoadPreviewMap({
       );
       const bounds = new google.maps.LatLngBounds();
       path.forEach((p) => bounds.extend(p));
-      map.fitBounds(bounds, 45);
-    } else if (origin) map.panTo(point(origin));
+      map.fitBounds(
+        bounds,
+        window.innerWidth >= 900
+          ? { top: 130, bottom: 50, left: 490, right: 45 }
+          : { top: 125, bottom: 170, left: 35, right: 35 },
+      );
+    } else if (origin) {
+      map.panTo(point(origin));
+      map.setZoom(15);
+    }
     return () => overlays.forEach((item) => item.setMap(null));
-  }, [map, origin, destination, geometry, en]);
+  }, [map, origin, destination, geometry, en, sites, onSiteSelect]);
   return (
     <>
       {(!key || failed) && (
@@ -113,7 +152,7 @@ export function RoadPreviewMap({
         className="road-preview-map"
         aria-label={en ? "Road preview map" : "道路案内の地図"}
       />
-      <p className="muted">
+      <p className="muted map-attribution">
         {en
           ? "A: start · B: destination. Selected places are not verified evacuation sites."
           : "A：出発地・B：目的地。選んだ地点は避難先として確認されていません。"}

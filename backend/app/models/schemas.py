@@ -121,6 +121,100 @@ class EarthquakeFeedOutput(BaseModel):
     notices: list[EarthquakeNotice]
 
 
+class LocalDataInput(BaseModel):
+    origin: Location
+    locationUseConsent: bool
+
+
+class LocalEarthquakeNotice(BaseModel):
+    id: str
+    code: Literal[551, 556]
+    eventId: str
+    issuedAt: str
+    area: str
+    title: str
+    hypocenter: str
+    scale: float
+
+
+class LocalEarthquakeFeed(BaseModel):
+    provider: Literal["p2pquake"] = "p2pquake"
+    status: Literal["available", "unavailable", "area_unknown"]
+    area: str | None = None
+    municipality: str | None = None
+    fetchedAt: str | None = None
+    notices: list[LocalEarthquakeNotice]
+
+
+class RealShelter(Location):
+    id: str
+    name: str
+    address: str
+    remarks: str
+    distanceMeters: int
+    openingStatus: Literal["unverified"] = "unverified"
+    accessibility: Literal["unverified"] = "unverified"
+
+
+class RealShelterFeed(BaseModel):
+    provider: Literal["gsi"] = "gsi"
+    status: Literal["available", "unavailable"]
+    fetchedAt: str | None = None
+    sites: list[RealShelter]
+
+
+class ShelterRecommendation(BaseModel):
+    site: RealShelter
+    route: RealRouteOutput
+    comparedSites: int
+    reachableSites: int
+    selectionBasis: Literal["shortest_walking_distance_among_nearby_three"] = (
+        "shortest_walking_distance_among_nearby_three"
+    )
+
+
+class AssistanceConsentInput(LocalDataInput):
+    locationSharingConsent: bool
+
+
+class AssistanceInput(AssistanceConsentInput):
+    supportType: Support = "navigation"
+
+
+class AssistanceCandidate(BaseModel):
+    id: str
+    supportType: Support
+    language: Literal["ja", "en"]
+    proximity: Literal["within_2km"] = "within_2km"
+
+
+class PublicMeetingPoint(Location):
+    id: str
+    name: str
+    address: str
+    remarks: str
+    openingStatus: Literal["unverified"] = "unverified"
+    accessibility: Literal["unverified"] = "unverified"
+
+
+class AssistanceOutput(BaseModel):
+    id: str
+    status: Literal["waiting", "accepted", "met", "completed", "cancelled", "expired"]
+    supportType: Support
+    role: Literal["requester", "helper"]
+    meetingPoint: PublicMeetingPoint | None = None
+    requesterArrived: bool = False
+    helperArrived: bool = False
+    expiresAt: str
+    warnings: list[str]
+
+
+class AssistanceProgress(BaseModel):
+    origin: Location | None = None
+    locationUseConsent: bool = False
+    action: Literal["arrive", "complete", "cancel"]
+
+
 class ProgressInput(BaseModel):
     status: Literal["meeting", "assisting"]
 

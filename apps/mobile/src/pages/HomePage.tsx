@@ -346,7 +346,7 @@ export function HomePage() {
                 : "道案内や通訳、徒歩での同行を依頼できます。"}
             </p>
           </div>
-          <IonButton routerLink="/support">
+          <IonButton routerLink="/simulation-support">
             {en ? "Request support" : "支援を求める"}
             <IonIcon slot="end" icon={arrowForwardOutline} />
           </IonButton>
@@ -365,7 +365,7 @@ export function HomePage() {
                 : "自分の避難を優先し、無理のない範囲で。"}
             </p>
           </div>
-          <IonButton fill="outline" routerLink="/helper">
+          <IonButton fill="outline" routerLink="/simulation-helper">
             {en ? "Offer support" : "支援に協力する"}
             <IonIcon slot="end" icon={arrowForwardOutline} />
           </IonButton>

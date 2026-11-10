@@ -55,6 +55,176 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/earthquakes/local": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Local Earthquakes */
+    post: operations["local_earthquakes_api_v1_earthquakes_local_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/shelters/nearby": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Real Shelters */
+    post: operations["real_shelters_api_v1_shelters_nearby_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/shelters/recommend": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Recommend Real Shelter */
+    post: operations["recommend_real_shelter_api_v1_shelters_recommend_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/assistance/requests": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Request Assistance */
+    post: operations["request_assistance_api_v1_assistance_requests_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/assistance/nearby": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Nearby Assistance */
+    post: operations["nearby_assistance_api_v1_assistance_nearby_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/assistance/mine": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** My Assistance */
+    get: operations["my_assistance_api_v1_assistance_mine_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/assistance/{request_id}/location": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Update Assistance Location */
+    post: operations["update_assistance_location_api_v1_assistance__request_id__location_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/assistance/{request_id}/accept": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Accept Assistance */
+    post: operations["accept_assistance_api_v1_assistance__request_id__accept_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/assistance/{request_id}/route": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Assistance Route */
+    post: operations["assistance_route_api_v1_assistance__request_id__route_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/assistance/{request_id}/progress": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Assistance Progress */
+    post: operations["assistance_progress_api_v1_assistance__request_id__progress_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/matches/{match_id}/route": {
     parameters: {
       query?: never;
@@ -400,6 +570,102 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
+    /** AssistanceCandidate */
+    AssistanceCandidate: {
+      /** Id */
+      id: string;
+      /**
+       * Supporttype
+       * @enum {string}
+       */
+      supportType:
+        "navigation" | "translation" | "information" | "walking_companion";
+      /**
+       * Language
+       * @enum {string}
+       */
+      language: "ja" | "en";
+      /**
+       * Proximity
+       * @default within_2km
+       * @constant
+       */
+      proximity: "within_2km";
+    };
+    /** AssistanceConsentInput */
+    AssistanceConsentInput: {
+      origin: components["schemas"]["Location"];
+      /** Locationuseconsent */
+      locationUseConsent: boolean;
+      /** Locationsharingconsent */
+      locationSharingConsent: boolean;
+    };
+    /** AssistanceInput */
+    AssistanceInput: {
+      origin: components["schemas"]["Location"];
+      /** Locationuseconsent */
+      locationUseConsent: boolean;
+      /** Locationsharingconsent */
+      locationSharingConsent: boolean;
+      /**
+       * Supporttype
+       * @default navigation
+       * @enum {string}
+       */
+      supportType:
+        "navigation" | "translation" | "information" | "walking_companion";
+    };
+    /** AssistanceOutput */
+    AssistanceOutput: {
+      /** Id */
+      id: string;
+      /**
+       * Status
+       * @enum {string}
+       */
+      status:
+        "waiting" | "accepted" | "met" | "completed" | "cancelled" | "expired";
+      /**
+       * Supporttype
+       * @enum {string}
+       */
+      supportType:
+        "navigation" | "translation" | "information" | "walking_companion";
+      /**
+       * Role
+       * @enum {string}
+       */
+      role: "requester" | "helper";
+      meetingPoint?: components["schemas"]["PublicMeetingPoint"] | null;
+      /**
+       * Requesterarrived
+       * @default false
+       */
+      requesterArrived: boolean;
+      /**
+       * Helperarrived
+       * @default false
+       */
+      helperArrived: boolean;
+      /** Expiresat */
+      expiresAt: string;
+      /** Warnings */
+      warnings: string[];
+    };
+    /** AssistanceProgress */
+    AssistanceProgress: {
+      origin?: components["schemas"]["Location"] | null;
+      /**
+       * Locationuseconsent
+       * @default false
+       */
+      locationUseConsent: boolean;
+      /**
+       * Action
+       * @enum {string}
+       */
+      action: "arrive" | "complete" | "cancel";
+    };
     /** Constraints */
     Constraints: {
       /**
@@ -490,6 +756,56 @@ export interface components {
     HTTPValidationError: {
       /** Detail */
       detail?: components["schemas"]["ValidationError"][];
+    };
+    /** LocalDataInput */
+    LocalDataInput: {
+      origin: components["schemas"]["Location"];
+      /** Locationuseconsent */
+      locationUseConsent: boolean;
+    };
+    /** LocalEarthquakeFeed */
+    LocalEarthquakeFeed: {
+      /**
+       * Provider
+       * @default p2pquake
+       * @constant
+       */
+      provider: "p2pquake";
+      /**
+       * Status
+       * @enum {string}
+       */
+      status: "available" | "unavailable" | "area_unknown";
+      /** Area */
+      area?: string | null;
+      /** Municipality */
+      municipality?: string | null;
+      /** Fetchedat */
+      fetchedAt?: string | null;
+      /** Notices */
+      notices: components["schemas"]["LocalEarthquakeNotice"][];
+    };
+    /** LocalEarthquakeNotice */
+    LocalEarthquakeNotice: {
+      /** Id */
+      id: string;
+      /**
+       * Code
+       * @enum {integer}
+       */
+      code: 551 | 556;
+      /** Eventid */
+      eventId: string;
+      /** Issuedat */
+      issuedAt: string;
+      /** Area */
+      area: string;
+      /** Title */
+      title: string;
+      /** Hypocenter */
+      hypocenter: string;
+      /** Scale */
+      scale: number;
     };
     /** Location */
     Location: {
@@ -669,6 +985,33 @@ export interface components {
        */
       status: "meeting" | "assisting";
     };
+    /** PublicMeetingPoint */
+    PublicMeetingPoint: {
+      /** Latitude */
+      latitude: number;
+      /** Longitude */
+      longitude: number;
+      /** Id */
+      id: string;
+      /** Name */
+      name: string;
+      /** Address */
+      address: string;
+      /** Remarks */
+      remarks: string;
+      /**
+       * Openingstatus
+       * @default unverified
+       * @constant
+       */
+      openingStatus: "unverified";
+      /**
+       * Accessibility
+       * @default unverified
+       * @constant
+       */
+      accessibility: "unverified";
+    };
     /** RealRouteInput */
     RealRouteInput: {
       origin: components["schemas"]["Location"];
@@ -711,6 +1054,53 @@ export interface components {
       warnings: string[];
       /** Checkedat */
       checkedAt: string;
+    };
+    /** RealShelter */
+    RealShelter: {
+      /** Latitude */
+      latitude: number;
+      /** Longitude */
+      longitude: number;
+      /** Id */
+      id: string;
+      /** Name */
+      name: string;
+      /** Address */
+      address: string;
+      /** Remarks */
+      remarks: string;
+      /** Distancemeters */
+      distanceMeters: number;
+      /**
+       * Openingstatus
+       * @default unverified
+       * @constant
+       */
+      openingStatus: "unverified";
+      /**
+       * Accessibility
+       * @default unverified
+       * @constant
+       */
+      accessibility: "unverified";
+    };
+    /** RealShelterFeed */
+    RealShelterFeed: {
+      /**
+       * Provider
+       * @default gsi
+       * @constant
+       */
+      provider: "gsi";
+      /**
+       * Status
+       * @enum {string}
+       */
+      status: "available" | "unavailable";
+      /** Fetchedat */
+      fetchedAt?: string | null;
+      /** Sites */
+      sites: components["schemas"]["RealShelter"][];
     };
     /** RecommendInput */
     RecommendInput: {
@@ -831,6 +1221,21 @@ export interface components {
        */
       dataStatus: "simulation";
     };
+    /** ShelterRecommendation */
+    ShelterRecommendation: {
+      site: components["schemas"]["RealShelter"];
+      route: components["schemas"]["RealRouteOutput"];
+      /** Comparedsites */
+      comparedSites: number;
+      /** Reachablesites */
+      reachableSites: number;
+      /**
+       * Selectionbasis
+       * @default shortest_walking_distance_among_nearby_three
+       * @constant
+       */
+      selectionBasis: "shortest_walking_distance_among_nearby_three";
+    };
     /** TranslationInput */
     TranslationInput: {
       /**
@@ -944,6 +1349,331 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["EarthquakeFeedOutput"];
+        };
+      };
+    };
+  };
+  local_earthquakes_api_v1_earthquakes_local_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["LocalDataInput"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["LocalEarthquakeFeed"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  real_shelters_api_v1_shelters_nearby_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["LocalDataInput"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RealShelterFeed"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  recommend_real_shelter_api_v1_shelters_recommend_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["LocalDataInput"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ShelterRecommendation"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  request_assistance_api_v1_assistance_requests_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AssistanceInput"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AssistanceOutput"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  nearby_assistance_api_v1_assistance_nearby_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["LocalDataInput"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AssistanceCandidate"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  my_assistance_api_v1_assistance_mine_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AssistanceOutput"][];
+        };
+      };
+    };
+  };
+  update_assistance_location_api_v1_assistance__request_id__location_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        request_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["LocalDataInput"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AssistanceOutput"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  accept_assistance_api_v1_assistance__request_id__accept_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        request_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AssistanceConsentInput"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AssistanceOutput"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  assistance_route_api_v1_assistance__request_id__route_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        request_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["LocalDataInput"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RealRouteOutput"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  assistance_progress_api_v1_assistance__request_id__progress_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        request_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AssistanceProgress"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AssistanceOutput"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
     };

@@ -11,6 +11,7 @@ import { ProfilePage } from "./pages/ProfilePage";
 import { SupportPage } from "./pages/SupportPage";
 import { HelperPage } from "./pages/HelperPage";
 import { MatchingPage } from "./pages/MatchingPage";
+import { AssistancePage } from "./pages/AssistancePage";
 import { AdminPage } from "./pages/AdminPage";
 import { api } from "./services/api";
 import { useAppStore } from "./stores/useAppStore";
@@ -33,12 +34,21 @@ export default function App() {
       <IonReactRouter>
         <IonRouterOutlet>
           <Route exact path="/welcome" component={WelcomePage} />
-          <Route exact path="/home" component={HomePage} />
-          <Route exact path="/navigation" component={NavigationPage} />
+          <Route exact path="/simulation" component={HomePage} />
+          <Route exact path="/home" component={NavigationPage} />
+          <Route exact path="/navigation">
+            <Redirect to="/home" />
+          </Route>
           <Route exact path="/profile" component={ProfilePage} />
-          <Route exact path="/support" component={SupportPage} />
-          <Route exact path="/helper" component={HelperPage} />
-          <Route exact path="/matching" component={MatchingPage} />
+          <Route exact path="/support">
+            <AssistancePage />
+          </Route>
+          <Route exact path="/simulation-support" component={SupportPage} />
+          <Route exact path="/helper">
+            <AssistancePage helper />
+          </Route>
+          <Route exact path="/simulation-helper" component={HelperPage} />
+          <Route exact path="/simulation-matching" component={MatchingPage} />
           <Route exact path="/admin" component={AdminPage} />
           <Route exact path="/">
             <Redirect to={hasSeenOnboarding() ? "/home" : "/welcome"} />

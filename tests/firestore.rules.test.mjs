@@ -86,6 +86,9 @@ test("exact locations and server claims remain unreadable, even to owners or cla
       "helper_claims/bob",
       "request_claims/alice",
       "road_status/r1",
+      "real_private_locations/alice",
+      "real_assistance_claims/alice",
+      "real_assistance/request1",
     ]) {
       await assertFails(getDoc(doc(db, path)));
       await assertFails(setDoc(doc(db, path), { injected: true }));

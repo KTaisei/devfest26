@@ -20,6 +20,15 @@ from ..models.schemas import (
     RealRouteOutput,
     MeetingRouteOutput,
     EarthquakeFeedOutput,
+    LocalDataInput,
+    LocalEarthquakeFeed,
+    RealShelterFeed,
+    AssistanceInput,
+    AssistanceConsentInput,
+    AssistanceCandidate,
+    AssistanceOutput,
+    AssistanceProgress,
+    ShelterRecommendation,
 )
 from ..services.route_optimizer import DATA, NODES, calculate, roads, now
 from ..services.matching_engine import ACTIVE, create_request, recommend, transition, expire_offers
@@ -52,6 +61,80 @@ def recent_earthquakes(user: Actor = Depends(actor)):
     return latest()
 
 
+@router.post("/earthquakes/local", response_model=LocalEarthquakeFeed)
+def local_earthquakes(payload: LocalDataInput, user: Actor = Depends(actor)):
+    from ..services.local_earthquakes import latest
+
+    return latest(payload)
+
+
+@router.post("/shelters/nearby", response_model=RealShelterFeed)
+def real_shelters(payload: LocalDataInput, user: Actor = Depends(actor)):
+    from ..services.real_shelters import latest
+
+    return latest(payload)
+
+
+@router.post("/shelters/recommend", response_model=ShelterRecommendation)
+def recommend_real_shelter(payload: LocalDataInput, user: Actor = Depends(actor)):
+    from ..services.real_shelters import recommend
+
+    return recommend(payload, repository.store.get("users", user.uid), user.uid)
+
+
+@router.post("/assistance/requests", response_model=AssistanceOutput, status_code=201)
+def request_assistance(payload: AssistanceInput, user: Actor = Depends(actor)):
+    from ..services.real_assistance import create
+
+    return create(user.uid, payload)
+
+
+@router.post("/assistance/nearby", response_model=list[AssistanceCandidate])
+def nearby_assistance(payload: LocalDataInput, user: Actor = Depends(actor)):
+    from ..services.real_assistance import nearby
+
+    return nearby(user.uid, payload)
+
+
+@router.get("/assistance/mine", response_model=list[AssistanceOutput])
+def my_assistance(user: Actor = Depends(actor)):
+    from ..services.real_assistance import mine
+
+    return mine(user.uid)
+
+
+@router.post("/assistance/{request_id}/location", response_model=AssistanceOutput)
+def update_assistance_location(
+    request_id: str, payload: LocalDataInput, user: Actor = Depends(actor)
+):
+    from ..services.real_assistance import update_location
+
+    return update_location(user.uid, request_id, payload)
+
+
+@router.post("/assistance/{request_id}/accept", response_model=AssistanceOutput)
+def accept_assistance(
+    request_id: str, payload: AssistanceConsentInput, user: Actor = Depends(actor)
+):
+    from ..services.real_assistance import accept
+
+    return accept(user.uid, request_id, payload)
+
+
+@router.post("/assistance/{request_id}/route", response_model=RealRouteOutput)
+def assistance_route(request_id: str, payload: LocalDataInput, user: Actor = Depends(actor)):
+    from ..services.real_assistance import route
+
+    return route(user.uid, request_id, payload)
+
+
+@router.post("/assistance/{request_id}/progress", response_model=AssistanceOutput)
+def assistance_progress(request_id: str, payload: AssistanceProgress, user: Actor = Depends(actor)):
+    from ..services.real_assistance import progress
+
+    return progress(user.uid, request_id, payload)
+
+
 @router.post("/matches/{match_id}/route", response_model=MeetingRouteOutput)
 def meeting_route(match_id: str, payload: Location, user: Actor = Depends(actor)):
     from ..services.meeting_routes import calculate
@@ -72,9 +155,10 @@ def get_profile(user: Actor = Depends(actor)):
 @router.put("/profile", response_model=ProfileOutput)
 def save_profile(payload: Profile, user: Actor = Depends(actor)):
     def commit(tx):
+        real_claim = tx.get("real_assistance_claims", user.uid)
         claim = tx.get("helper_claims", user.uid)
         request_claim = tx.get("request_claims", user.uid)
-        if claim or request_claim:
+        if claim or request_claim or real_claim:
             raise HTTPException(
                 409, "Cancel or complete active assistance before changing your profile"
             )

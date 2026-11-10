@@ -22,10 +22,15 @@ def main():
     parser.add_argument(
         "--real-roads", action="store_true", help="Also test public road points; never reads GPS"
     )
+    parser.add_argument(
+        "--live-data",
+        action="store_true",
+        help="Check P2P/GSI and route comparison using fixed public points, without creating support requests",
+    )
     args = parser.parse_args()
     if args.deployed and args.project != "tasuku-77c63":
         parser.error("The deployed check only targets tasuku-77c63")
-    if args.real_roads and not args.deployed:
+    if (args.real_roads or args.live_data) and not args.deployed:
         parser.error("--real-roads requires --deployed")
     root = Path(__file__).resolve().parents[1]
     backend = dotenv_values(root / "backend/.env.cloud")
@@ -84,7 +89,7 @@ def main():
                 "isAvailableToHelp": False,
             }
             connection = (
-                httpx.Client(base_url="https://tasuku-77c63.web.app", timeout=30)
+                httpx.Client(base_url="https://tasuku-77c63.web.app", timeout=60)
                 if args.deployed
                 else TestClient(app)
             )
@@ -149,6 +154,44 @@ def main():
                     assert notices.json()["status"] == "available"
                     print(
                         "PASS: real road route with explicit consent; public earthquake feed remains distinct from EEW"
+                    )
+                if args.live_data:
+                    body = {
+                        "origin": {"latitude": 34.4884, "longitude": 133.3614},
+                        "locationUseConsent": True,
+                    }
+                    denied = client.post(
+                        "/api/v1/earthquakes/local",
+                        headers=headers,
+                        json={**body, "locationUseConsent": False},
+                    )
+                    assert denied.status_code == 422
+                    local = client.post("/api/v1/earthquakes/local", headers=headers, json=body)
+                    assert local.status_code == 200 and local.json()["status"] == "available", (
+                        f"Local source status: HTTP {local.status_code}, {local.json().get('status')}"
+                    )
+                    assert (
+                        local.json()["provider"] == "p2pquake"
+                        and local.json()["area"] == "広島県南東部"
+                    )
+                    sites = client.post("/api/v1/shelters/nearby", headers=headers, json=body)
+                    assert sites.status_code == 200 and sites.json()["status"] == "available"
+                    assert sites.json()["sites"] and sites.json()["provider"] == "gsi"
+                    compared = client.post("/api/v1/shelters/recommend", headers=headers, json=body)
+                    assert compared.status_code == 200, (
+                        f"Route comparison status {compared.status_code}"
+                    )
+                    assert compared.json()["comparedSites"] == 3
+                    assert compared.json()["route"]["accessibility"] == "unverified"
+                    assert client.get("/api/v1/assistance/mine", headers=headers).json() == []
+                    denied = client.post(
+                        "/api/v1/assistance/requests",
+                        headers=headers,
+                        json={**body, "locationSharingConsent": False},
+                    )
+                    assert denied.status_code == 422
+                    print(
+                        "PASS: deployed P2P local-area filter, actual GSI sites and three walking route comparison; no support requests created"
                     )
     finally:
         if account:

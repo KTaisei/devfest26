@@ -1382,3 +1382,347 @@ a:focus-visible {
   display: inline-block;
   padding-block: 12px;
 }
+
+/* The primary map uses the viewport; long controls scroll inside a bottom sheet.
+   Keep Google's branding and map controls above the sheet, never underneath it. */
+.map-shell {
+  display: block;
+  min-height: 100%;
+}
+.map-shell .sidebar,
+.map-shell .topbar,
+.map-shell .page-heading,
+.map-shell .simulation-label {
+  display: none;
+}
+.map-shell .main-area {
+  margin: 0;
+  width: 100%;
+  max-width: none;
+}
+.map-shell .page-body {
+  padding: 0;
+  max-width: none;
+}
+.live-map-stage {
+  position: relative;
+  height: calc(100dvh - 76px - env(safe-area-inset-bottom, 0px));
+  min-height: 320px;
+  overflow: hidden;
+  background: #e9f0f1;
+}
+.live-map-stage .road-preview-map {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+}
+.live-map-stage > p[role="alert"] {
+  position: absolute;
+  top: 100px;
+  left: 16px;
+  right: 16px;
+  background: white;
+  padding: 12px;
+  z-index: 2;
+}
+.live-map-stage .map-attribution {
+  position: absolute;
+  left: 10px;
+  bottom: 2px;
+  font-size: 9px;
+  background: #fffdf4;
+  margin: 0;
+  max-width: 48%;
+  pointer-events: none;
+}
+.map-top-controls {
+  position: absolute;
+  top: calc(14px + env(safe-area-inset-top, 0px));
+  left: 16px;
+  right: 16px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  pointer-events: none;
+}
+.map-top-controls a {
+  pointer-events: auto;
+  text-decoration: none;
+  box-shadow: 0 3px 18px #122c3820;
+  background: white;
+  border-radius: 15px;
+  padding: 10px 16px;
+}
+.map-brand {
+  font-size: 23px;
+  font-weight: 800;
+  color: #325cde;
+}
+.map-brand span {
+  font-size: 16px;
+  color: #1b2744;
+  letter-spacing: 2px;
+}
+.map-profile {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+}
+.map-training {
+  position: absolute;
+  top: calc(73px + env(safe-area-inset-top, 0px));
+  left: 16px;
+  right: 16px;
+  text-align: center;
+  font-size: 11px;
+  background: #fffbebed;
+  color: #754c13;
+  padding: 6px;
+  border-radius: 10px;
+  pointer-events: none;
+}
+.local-quake-alert {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  top: 111px;
+  border: 1px solid #bf4848;
+  background: #fff1f0;
+  padding: 12px;
+  border-radius: 12px;
+  font-weight: 700;
+  color: #922d24;
+}
+.map-sheet {
+  position: absolute;
+  width: min(440px, calc(100% - 32px));
+  left: 16px;
+  bottom: 32px;
+  background: #fff;
+  border: 1px solid #dde4ee;
+  border-radius: 22px;
+  box-shadow: 0 6px 30px #1c36542b;
+  z-index: 3;
+  max-height: calc(100% - 150px);
+  display: flex;
+  flex-direction: column;
+}
+.map-sheet.expanded {
+  height: min(550px, calc(100% - 150px));
+}
+.sheet-toggle {
+  flex-shrink: 0;
+  background: transparent;
+  color: #53657c;
+  border: 0;
+  padding: 8px 12px 4px;
+  font-size: 11px;
+  text-align: center;
+}
+.sheet-handle {
+  display: block;
+  width: 34px;
+  height: 4px;
+  background: #ccd5df;
+  border-radius: 5px;
+  margin: 0 auto 4px;
+}
+.map-location-row {
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.map-location-row strong {
+  display: block;
+  font-size: 14px;
+}
+.map-location-row small {
+  display: block;
+  font-size: 10px;
+  color: #687c92;
+  margin-top: 4px;
+}
+.map-location-row ion-button {
+  margin: 0;
+  font-size: 11px;
+}
+.map-sheet-content {
+  overflow: auto;
+  padding: 0 16px 18px;
+  font-size: 13px;
+  overscroll-behavior: contain;
+}
+.map-sheet-content p {
+  line-height: 1.65;
+}
+.map-sheet-content .map-privacy {
+  font-size: 11px;
+  color: #63738a;
+  margin: 0 0 12px;
+}
+.map-tabs {
+  display: flex;
+  gap: 4px;
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 1;
+  padding: 6px 0;
+}
+.map-tabs button {
+  flex: 1;
+  font-size: 12px;
+  border: 0;
+  border-radius: 10px;
+  padding: 11px 5px;
+  background: #f0f3f8;
+  color: #65748d;
+}
+.map-tabs button[aria-selected="true"] {
+  background: #e7eeff;
+  color: #315ed1;
+  font-weight: 700;
+}
+.real-site-list {
+  display: grid;
+  gap: 7px;
+  margin-bottom: 14px;
+}
+.real-site-list button {
+  background: #f8fafb;
+  border: 1px solid #e5eaf0;
+  border-radius: 12px;
+  padding: 12px 8px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  color: #1e2e47;
+  text-align: left;
+}
+.real-site-list button > span:nth-child(2) {
+  flex: 1;
+  min-width: 0;
+}
+.real-site-list small {
+  display: block;
+  color: #718298;
+  font-size: 10px;
+  margin-top: 4px;
+}
+.real-site-list button > span:last-child {
+  font-size: 11px;
+  white-space: nowrap;
+}
+.site-symbol {
+  border-radius: 9px;
+  padding: 7px;
+  background: #e4f2ec;
+  color: #16725f;
+  font-weight: 700;
+}
+.source-time {
+  display: block;
+  color: #65748d;
+  margin: 8px 0 14px;
+}
+.local-quake-card {
+  padding: 12px;
+  background: #fff6ed;
+  border: 1px solid #f0ddc2;
+  border-radius: 12px;
+  margin: 10px 0;
+}
+.manual-start {
+  margin-top: 20px;
+  border-top: 1px solid #e5eaf0;
+  padding-top: 14px;
+}
+.manual-start label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0;
+}
+.manual-start input {
+  min-width: 0;
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #bdcadd;
+  border-radius: 8px;
+}
+.map-shell .mobile-nav {
+  display: flex;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: calc(76px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: white;
+  z-index: 5;
+}
+.map-shell .mobile-nav a {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  color: #718095;
+  text-decoration: none;
+}
+.map-shell .mobile-nav a.active {
+  color: #345edb;
+}
+.map-shell .mobile-nav ion-icon {
+  font-size: 22px;
+}
+@media (min-width: 900px) {
+  .map-sheet {
+    bottom: 44px;
+    left: 24px;
+  }
+  .map-sheet.expanded {
+    max-height: calc(100% - 160px);
+    height: min(580px, calc(100% - 160px));
+  }
+}
+
+.live-map-stage .map-attribution {
+  display: none;
+}
+.live-map-stage .gmnoprint.gm-bundled-control-on-bottom {
+  bottom: 30px !important;
+}
+/* Leave the built-in Google zoom controls unobscured in the top right. */
+.map-profile {
+  margin-right: 54px;
+}
+.map-training,
+.local-quake-alert {
+  right: 74px;
+}
+
+.map-compact-privacy {
+  font-size: 10px;
+  line-height: 1.5;
+  color: #66758a;
+  margin: 0;
+  padding: 0 16px 12px;
+}
+.map-route-summary {
+  border: 0;
+  border-top: 1px solid #e5eaf0;
+  border-radius: 0 0 22px 22px;
+  padding: 12px 16px;
+  background: #eef3ff;
+  text-align: left;
+  font-size: 12px;
+  color: #3455a3;
+}

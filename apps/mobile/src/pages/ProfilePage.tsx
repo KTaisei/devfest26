@@ -40,10 +40,16 @@ export function ProfilePage() {
   });
   return (
     <Layout
+      dataMode="real_preview"
       title={en ? "Your profile" : "プロフィール"}
       eyebrow="YOUR PREFERENCES"
     >
       <div className="form-card">
+        <p className="notice">
+          {en
+            ? "Real walking routes use language and a time estimate. Stair avoidance and wheelchair access are not verified."
+            : "実道路の案内には言語と移動時間の目安を反映します。階段回避・車いす対応の経路検証は未対応です。"}
+        </p>
         <h2>
           {en ? "Tell us what works for you." : "あなたに合った案内のために。"}
         </h2>

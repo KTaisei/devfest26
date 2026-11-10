@@ -43,7 +43,14 @@ def credentials():
 def fetch_route(payload: RealRouteInput, language: str):
     config = settings()
     body = {
-        key: {"location": {"latLng": getattr(payload, key).model_dump()}}
+        key: {
+            "location": {
+                "latLng": {
+                    "latitude": getattr(payload, key).latitude,
+                    "longitude": getattr(payload, key).longitude,
+                }
+            }
+        }
         for key in ("origin", "destination")
     }
     body.update(

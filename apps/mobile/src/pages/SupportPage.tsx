@@ -50,7 +50,7 @@ export function SupportPage() {
     },
     onSuccess: () => {
       void client.invalidateQueries({ queryKey: ["requests"] });
-      history.push("/matching");
+      history.push("/simulation-matching");
     },
   });
   return (
@@ -157,7 +157,7 @@ export function SupportPage() {
                 ? "Review request"
                 : "内容を確認する"}
           </IonButton>
-          <IonButton fill="outline" routerLink="/matching">
+          <IonButton fill="outline" routerLink="/simulation-matching">
             {en ? "My requests" : "依頼の状況を見る"}
           </IonButton>
         </div>

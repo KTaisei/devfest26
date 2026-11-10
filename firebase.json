@@ -15,7 +15,55 @@
         }
       },
       {
-        "source": "**",
+        "source": "/",
+        "destination": "/index.html"
+      },
+      {
+        "source": "/home",
+        "destination": "/index.html"
+      },
+      {
+        "source": "/navigation",
+        "destination": "/index.html"
+      },
+      {
+        "source": "/profile",
+        "destination": "/index.html"
+      },
+      {
+        "source": "/support",
+        "destination": "/index.html"
+      },
+      {
+        "source": "/helper",
+        "destination": "/index.html"
+      },
+      {
+        "source": "/matching",
+        "destination": "/index.html"
+      },
+      {
+        "source": "/admin",
+        "destination": "/index.html"
+      },
+      {
+        "source": "/welcome",
+        "destination": "/index.html"
+      },
+      {
+        "source": "/simulation",
+        "destination": "/index.html"
+      },
+      {
+        "source": "/simulation-support",
+        "destination": "/index.html"
+      },
+      {
+        "source": "/simulation-helper",
+        "destination": "/index.html"
+      },
+      {
+        "source": "/simulation-matching",
         "destination": "/index.html"
       }
     ],

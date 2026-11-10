@@ -7,6 +7,8 @@
 !backend/app/
 !backend/app/**
 !data/
+!data/reference/
+!data/reference/**
 !data/simulation/
 !data/simulation/**
 **/__pycache__/**

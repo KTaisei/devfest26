@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import { IonContent, IonIcon, IonPage } from "@ionic/react";
 import {
   compassOutline,
@@ -27,29 +27,33 @@ export function Layout({
   title,
   eyebrow,
   dataMode = "simulation",
+  mapMode = false,
 }: {
   children: ReactNode;
   title: string;
   eyebrow?: string;
   dataMode?: "simulation" | "real_preview";
+  mapMode?: boolean;
 }) {
   const { language, setLanguage } = useAppStore();
   const en = language === "en";
+  const pathname = useLocation().pathname;
+  const training = pathname.startsWith("/simulation") || pathname === "/admin";
   const links = [
     {
-      to: "/home",
+      to: training ? "/simulation" : "/home",
       label: en ? "Evacuation map" : "避難マップ",
       mobileLabel: en ? "Map" : "マップ",
       icon: compassOutline,
     },
     {
-      to: "/support",
+      to: training ? "/simulation-support" : "/support",
       label: en ? "Request support" : "支援を求める",
       mobileLabel: en ? "Request" : "支援依頼",
       icon: heartOutline,
     },
     {
-      to: "/helper",
+      to: training ? "/simulation-helper" : "/helper",
       label: en ? "Offer support" : "支援に協力する",
       mobileLabel: en ? "Help" : "支援協力",
       icon: peopleOutline,
@@ -64,7 +68,7 @@ export function Layout({
   return (
     <IonPage>
       <IonContent>
-        <div className="app-shell">
+        <div className={`app-shell ${mapMode ? "map-shell" : ""}`}>
           <aside className="sidebar">
             <NavLink className="brand" to="/home">
               <span className="brand-symbol">
@@ -149,8 +153,8 @@ export function Layout({
                 <span className="area-tag">
                   {dataMode === "real_preview"
                     ? en
-                      ? "Your selected points"
-                      : "選択した出発地・目的地"
+                      ? "Real data trial"
+                      : "実データ接続・試験版"
                     : en
                       ? "Fukuyama demo area"
                       : "福山駅周辺・模擬エリア"}
@@ -168,7 +172,8 @@ export function Layout({
                 isActive={(_, location) =>
                   location.pathname === l.to ||
                   (l.to === "/home" && location.pathname === "/navigation") ||
-                  (l.to === "/support" && location.pathname === "/matching")
+                  (l.to === "/simulation-support" &&
+                    location.pathname === "/simulation-matching")
                 }
               >
                 <IonIcon icon={l.icon} />

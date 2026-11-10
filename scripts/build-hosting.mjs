@@ -1,5 +1,8 @@
 // Cross-platform production build: never embed the local API URL or emulator.
 import { spawnSync } from "node:child_process";
+import { existsSync, mkdtempSync, cpSync, readdirSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { build, loadEnv } from "vite";
 
 const root = "apps/mobile";
@@ -31,4 +34,29 @@ const check = spawnSync(
   { stdio: "inherit" },
 );
 if (check.status !== 0) process.exit(check.status || 1);
-await build({ root, mode: "cloud" });
+// Retain the previous release's hashed assets for tabs still running that build.
+// Only retain one preceding build; the HTML recovery handler covers older tabs.
+const backup = mkdtempSync(join(tmpdir(), "tasuku-assets-"));
+const assets = `${root}/dist/assets`;
+const previous = existsSync(assets)
+  ? readdirSync(assets).filter((name) => /\.(js|css)$/.test(name))
+  : [];
+// The manifest records this build's files, so retained assets don't accumulate.
+const { readFileSync, writeFileSync } = await import("node:fs");
+const manifestPath = `${root}/dist/release-assets.json`;
+const retained = existsSync(manifestPath)
+  ? JSON.parse(readFileSync(manifestPath, "utf8"))
+  : previous;
+for (const name of retained) {
+  if (previous.includes(name)) cpSync(join(assets, name), join(backup, name));
+}
+try {
+  await build({ root, mode: "cloud" });
+  const current = readdirSync(assets);
+  for (const name of readdirSync(backup)) {
+    if (!current.includes(name)) cpSync(join(backup, name), join(assets, name));
+  }
+  writeFileSync(manifestPath, JSON.stringify(current));
+} finally {
+  rmSync(backup, { recursive: true, force: true });
+}

@@ -78,3 +78,22 @@ npm run typecheck
 ```
 
 `types/domain.ts` は主要なモデルを生成型から参照し、UI専用のシナリオ・地図モデルを補います。生成結果とOpenAPIをセットでコミットします。
+
+## 通常画面の実位置API
+
+全エンドポイントに認証が必要です。生成OpenAPIとTSが契約の正本です。GETのURLへGPSを載せません。
+
+| メソッド・パス                   | 動作                                                                                               |
+| -------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `POST /earthquakes/local`        | 本人が同意したoriginを地域へ対応づけ、P2P551/556を絞り込み。available / unavailable / area_unknown |
+| `POST /shelters/nearby`          | 同意したoriginから5km以内のGSI地震対応指定緊急避難場所を最大20件                                   |
+| `POST /shelters/recommend`       | 近い最大3公開地点の実道路距離を比較。Googleへの位置送信同意必須                                    |
+| `POST /assistance/requests`      | GPS支援依頼を30分の期限で作成。位置使用・共有同意とプロフィールの共有有効が必要                    |
+| `POST /assistance/nearby`        | 自分のoriginの2km以内で能力・言語が合う本人申請のみ。相手のGPS非公開                               |
+| `GET /assistance/mine`           | 本人が参加する進行中の依頼のみ                                                                     |
+| `POST /assistance/{id}/location` | 依頼者がwaiting中に自分のGPSを更新。期限は延長しない                                               |
+| `POST /assistance/{id}/accept`   | 支援者が同意。実在する共通地点と両者の実道路を確認後、排他的に確定                                 |
+| `POST /assistance/{id}/route`    | 当事者が自分のoriginから公開合流地点への道順を取得。相手の経路を返さない                           |
+| `POST /assistance/{id}/progress` | arrive / complete / cancel。arriveだけ同意と新しいGPS入力が必要。双方確認後のみmet                 |
+
+`GET /earthquakes/recent` は旧版クライアント用のJMA Atom互換APIです。通常画面は使用しません。実位置の支援は旧 `/support-requests`・`/matches` の架空グラフを呼びません。

@@ -2,7 +2,7 @@
 
 Hostingは `Cache-Control: no-cache` を付与し、再読み込み時に最新ビルドを検証します。以前の公開ページがブラウザに残っている場合は一度再読み込みしてください。ハッシュ付きファイルも再検証する構成で、オフラインキャッシュは提供しません。
 
-公開先は https://tasuku-77c63.web.app です。道路・避難場所・災害情報は架空の訓練用です。実際の避難判断には使用できません。Firebase Hostingから東京リージョンのCloud Run `tasuku-api` へ `/api/**` を転送します。
+公開先は https://tasuku-77c63.web.app です。通常画面は実位置・実道路・GSI避難場所・P2P地震情報を使う試験版です。架空データは明示した `/simulation` 画面に分離しています。実際の避難判断には使用できません。Firebase Hostingから東京リージョンのCloud Run `tasuku-api` へ `/api/**` を転送します。
 
 ## 更新の順序（Mac・Windows共通）
 
@@ -52,3 +52,15 @@ ADCと両方の `.env.cloud` を設定済みの開発端末では、`npm run ver
 さらに `--real-roads` を追加すると、公開地点2点での実道路経路・送信同意拒否・気象庁公開情報を確認します。実GPSは取得しません。詳細は [REAL_DATA.md](REAL_DATA.md) を参照してください。
 
 最大インスタンスは1、最小は0ですが、Firestore・ビルド・保存・Maps・Vertexを含む無料利用を保証しません。ハッカソンクレジットの残額と対象は請求画面で確認してください。全件scanとポーリングを使う小規模デモで、利用者数を増やす前に [ARCHITECTURE.md](ARCHITECTURE.md) の制限を解消します。実端末のGPS・キーボード・iOS/Androidアプリは別途検証が必要です。
+
+## 更新をまたいで開いていたタブのJavaScript読込み
+
+旧ハッシュのJSが消えると、以前はSPAのcatch-all rewriteがHTMLを200で返し、module MIMEエラーになっていました。GPSのWeb実装はブラウザAPIを直接使い、Capacitorの遅延Webチャンクを経由しません。`index.html` はモジュール読み込み失敗時にビルドごと一度だけ再読み込みし、再失敗は手動ボタンを表示します。
+
+`build:hosting` は同じ作業ディレクトリの前回ビルドのハッシュ資産を1世代保持します。新規CI・新規PCでのビルドには前回資産がないため、上記の再読み込みが必要です。SPA rewriteは既知の画面URLに限定し、存在しない `/assets` は404になります。MIMEエラーを隠すためにJSの型や `nosniff` を緩めません。
+
+`data/reference` も `.gcloudignore` の許可リストに含めます。クラウドの非公開位置削除には既存の60秒保守に加え、次を設定します（Mac/Windows共通）。TTL削除は非同期なので、API自身が期限判定と削除を行います。
+
+```sh
+gcloud firestore fields ttls update expiresAt --collection-group=real_private_locations --enable-ttl --project=tasuku-77c63
+```

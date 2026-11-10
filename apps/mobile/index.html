@@ -17,6 +17,47 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      // Run before the module graph: old tabs can request a removed lazy chunk.
+      // One refresh per document build; failures thereafter offer a manual retry.
+      function recoverModule(event) {
+        var message = String(event.reason || event.message || "");
+        if (
+          event.type !== "vite:preloadError" &&
+          !/dynamically imported module|module script|JavaScript MIME|Importing a module/i.test(
+            message,
+          )
+        )
+          return;
+        try {
+          var key =
+            "tasuku:module-recovery:" +
+            document.querySelector('script[type="module"]').getAttribute("src");
+          if (!sessionStorage.getItem(key)) {
+            sessionStorage.setItem(key, "1");
+            event.preventDefault();
+            location.reload();
+            return;
+          }
+        } catch (_) {}
+        var notice = document.createElement("div");
+        notice.setAttribute("role", "alert");
+        notice.style.cssText =
+          "position:fixed;inset:auto 12px 12px;z-index:99999;background:white;color:#17213b;padding:20px;border:2px solid #2563eb;border-radius:12px";
+        notice.textContent =
+          "更新ファイルを読み込めません。通信を確認して再読み込みしてください。 / Update unavailable. ";
+        var button = document.createElement("button");
+        button.textContent = "再読み込み / Reload";
+        button.onclick = function () {
+          location.reload();
+        };
+        notice.appendChild(button);
+        document.body.appendChild(notice);
+      }
+      window.addEventListener("vite:preloadError", recoverModule);
+      window.addEventListener("unhandledrejection", recoverModule);
+      window.addEventListener("error", recoverModule);
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

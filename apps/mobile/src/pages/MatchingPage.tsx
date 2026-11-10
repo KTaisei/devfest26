@@ -274,7 +274,7 @@ export function MatchingPage() {
                 : "条件に合う支援者が見つかりません。避難を続けながら、改めて確認してください。"}
             </div>
           )}
-          <IonButton fill="outline" routerLink="/support">
+          <IonButton fill="outline" routerLink="/simulation-support">
             {en ? "New request" : "新しく依頼する"}
           </IonButton>
         </section>
