@@ -93,3 +93,7 @@ P2Pの551/556は `local_earthquakes.py` が現在地の地震細分区域で絞�
 支援一覧は同意と新しいGPSがある場合だけ5秒、本人の進行状態は3秒周期です。Queryの既存データを更新中も表示し、再読み込みを要求しません。画面が非表示なら停止し、位置を永続キャッシュへ保存しません。詳細・未確認事項は [LIVE_NAVIGATION.md](LIVE_NAVIGATION.md)。
 
 FirestoreのSDK再試行が一時的な `Aborted` で尽きた場合だけ、新しいトランザクションと小さいランダム待機で1回再試行します。外部の経路/AI呼出しは繰り返しません。業務例外は再試行せず、競合が続く場合は `503` / `Retry-After: 1` / `code: store_busy` に変換します。APIのエラーに座標やSDK例外本文を含めません。[エミュレータのトランザクション制限](https://docs.cloud.google.com/firestore/native/docs/emulator)も参照してください。
+
+## 共通GPSセッションと保存同意
+
+`LocationSession` はアプリ最上位で位置のwatchを1つ管理します。`foregroundLocation` は前景／背景・古いコールバック・GPS失効のライフサイクル、`locationConsent` はバージョン付き同意フラグの永続化、`useLocationSession` は現在のGPSと同意のメモリ状態、`LocationPreferences` は同意と状態の表示を担当します。地図・支援・音声案内はこの位置を共有し、各画面からwatchを増やしません。APIの同意検証・プロフィールの位置共有・業務操作は従来どおり独立しています。詳細は [LIVE_NAVIGATION.md](LIVE_NAVIGATION.md) を参照してください。

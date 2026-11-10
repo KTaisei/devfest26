@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { IonButton } from "@ionic/react";
 import { RoadPreviewMap } from "./RoadPreviewMap";
-import { watchLocation } from "../services/location";
+import { useLocationSession } from "../stores/useLocationSession";
 import {
   advance,
   prepareRoute,
@@ -25,7 +25,7 @@ export function TurnByTurnNavigator({
   en: boolean;
   recalculate: (origin: Point) => Promise<Route>;
 }) {
-  const [consent, setConsent] = useState(false);
+  const consent = useLocationSession((s) => s.consent.services);
   const [running, setRunning] = useState(false);
   const [muted, setMuted] = useState(false);
   const [currentRoute, setCurrentRoute] = useState(route);
@@ -33,6 +33,9 @@ export function TurnByTurnNavigator({
   const [progress, setProgress] = useState<Progress>();
   const [message, setMessage] = useState("");
   const [replanning, setReplanning] = useState(false);
+  useEffect(() => {
+    if (!consent) setRunning(false);
+  }, [consent]);
   const callback = useRef(recalculate);
   callback.current = recalculate;
   const muteRef = useRef(muted);
@@ -193,22 +196,16 @@ export function TurnByTurnNavigator({
           actualRoute.steps[next.step]?.instruction || instruction,
         );
     };
-    void watchLocation(onFix, (error) => {
-      if (live) {
-        setMessage(error);
+    // Subscribe to the app's sole watch; never create another native/browser watcher.
+    dispose = useLocationSession.subscribe((state) => {
+      if (!state.consent.services || state.error) {
         setRunning(false);
+        return;
       }
-    })
-      .then((stop) => {
-        if (live) dispose = stop;
-        else stop();
-      })
-      .catch(() => {
-        if (live) {
-          setMessage(en ? "GPS unavailable." : "GPSを開始できません。");
-          setRunning(false);
-        }
-      });
+      if (state.fix) onFix(state.fix);
+    });
+    const initial = useLocationSession.getState().fix;
+    if (initial) onFix(initial);
     const timer = window.setInterval(() => {
       if (Date.now() - lastFixAt > 10000) {
         setProgress((p) => (p ? { ...p, status: "stale" } : p));
@@ -244,7 +241,7 @@ export function TurnByTurnNavigator({
     // A session captures its route. Updated route geometry stays inside it;
     // parent rerenders must never create another GPS watcher.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [running, route, en]);
+  }, [running, route, en, consent]);
   const status = progress?.status;
   const instruction =
     progress && status === "tracking"
@@ -263,16 +260,11 @@ export function TurnByTurnNavigator({
   return (
     <section className="navigation-start">
       <h3>{en ? "In-app voice navigation" : "アプリ内の音声付き経路案内"}</h3>
-      <label className="navigation-consent">
-        <input
-          type="checkbox"
-          checked={consent}
-          onChange={(e) => setConsent(e.target.checked)}
-        />
+      <p>
         {en
-          ? "I agree to continuous GPS while this screen is open, display on Google Maps, route recalculation through TASUKU/Google, and browser speech. No tracking history is stored. Backgrounding stops navigation."
-          : "この画面でのGPS連続取得、Google地図への表示、TASUKU・Googleへの送信による経路再計算とブラウザ音声に同意します。移動履歴は保存しません。画面を閉じると案内は停止します。"}
-      </label>
+          ? "Uses saved GPS/Google consent. Start enables browser voice. Navigation stops in the background; GPS resumes automatically when you return."
+          : "保存したGPS・Google送信の同意を利用します。開始するとブラウザ音声を有効にします。背景では案内を停止し、戻るとGPS取得は自動再開します。"}
+      </p>
       <p className="muted">
         {en
           ? "Training only. GPS/voice may be delayed. Ordinary walking routes do not verify disaster safety or accessibility."

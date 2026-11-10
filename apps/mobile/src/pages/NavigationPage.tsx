@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { IonButton } from "@ionic/react";
 import { useMutation } from "@tanstack/react-query";
 import { Link, useLocation } from "react-router-dom";
@@ -7,7 +7,9 @@ import { TurnByTurnNavigator } from "../components/TurnByTurnNavigator";
 import { EvacuationAdvisor } from "../components/EvacuationAdvisor";
 import { RoadPreviewMap } from "../components/RoadPreviewMap";
 import { realData } from "../services/realData";
-import { getCurrentLocation } from "../services/location";
+import { useLocationSession } from "../stores/useLocationSession";
+import { LocationPreferences } from "../components/LocationPreferences";
+import { meters } from "../navigation/progress";
 import { useRealEnvironment } from "../features/useRealEnvironment";
 import { useAppStore } from "../stores/useAppStore";
 import type { Location } from "../types/domain";
@@ -40,8 +42,9 @@ export function NavigationPage() {
   const [originTime, setOriginTime] = useState<Date>();
   const [destination, setDestination] = useState<Location>();
   const [destinationName, setDestinationName] = useState("");
-  const [consent, setConsent] = useState(false);
-  const [compareConsent, setCompareConsent] = useState(false);
+  const { consent: permissions, fix } = useLocationSession();
+  const consent = permissions.services,
+    compareConsent = consent;
   const [recommended, setRecommended] = useState<{
     signature: string;
     point: Location;
@@ -49,55 +52,83 @@ export function NavigationPage() {
     route: Route;
     compared: number;
   }>();
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(!permissions.services);
   const [tab, setTab] = useState<"sites" | "earthquakes" | "route">("sites");
   const [manual, setManual] = useState({ latitude: "", longitude: "" });
   const [originSource, setOriginSource] = useState<"gps" | "manual">("gps");
   const active = useLocation().pathname === "/home";
-  const { earthquake, shelters } = useRealEnvironment(origin, active);
-  const chooseDestination = useCallback((point: Location) => {
-    setDestination(point);
-    setDestinationName("");
-    setConsent(false);
-    setTab("route");
-    setExpanded(true);
-  }, []);
+  const [areaOrigin, setAreaOrigin] = useState<Location>();
+  useEffect(() => {
+    if (!permissions.services) {
+      setOrigin(undefined);
+      setOriginTime(undefined);
+      setAreaOrigin(undefined);
+      return;
+    }
+    if (originSource === "manual") {
+      setAreaOrigin(origin);
+      return;
+    }
+    if (!fix || Date.now() - fix.timestamp > 10000) {
+      setAreaOrigin(undefined);
+      return;
+    }
+    setOriginTime(new Date(fix.timestamp));
+    // Keep the planned route stable. The live marker/watch continues independently.
+    setOrigin((previous) => previous || fix);
+    setAreaOrigin((previous) =>
+      !previous || meters(previous, fix) >= 250 ? fix : previous,
+    );
+  }, [fix, permissions.services, originSource, origin]);
+  const liveGPS = Boolean(fix && Date.now() - fix.timestamp <= 10000);
+  const usable = consent && (originSource === "manual" || liveGPS);
+  const { earthquake, shelters } = useRealEnvironment(
+    areaOrigin,
+    active && usable,
+  );
+
+  const chooseDestination = useCallback(
+    (point: Location) => {
+      if (originSource === "gps" && fix) setOrigin(fix);
+      setDestination(point);
+      setDestinationName("");
+      setTab("route");
+      setExpanded(true);
+    },
+    [fix, originSource],
+  );
   const chooseSite = useCallback(
     (id: string) => {
       const site = shelters.data?.sites.find((s) => s.id === id);
       if (site) {
+        if (originSource === "gps" && fix) setOrigin(fix);
         setDestination(site);
         setDestinationName(site.name);
-        setConsent(false);
         setTab("route");
         setExpanded(true);
       }
     },
-    [shelters.data],
+    [shelters.data, fix, originSource],
   );
   function setStart(point: Location, source: "gps" | "manual") {
     setOrigin(point);
     setOriginTime(new Date());
     setOriginSource(source);
-    setConsent(false);
-    setCompareConsent(false);
   }
-  const gps = useMutation({
-    mutationFn: getCurrentLocation,
-    onSuccess: (point) => {
-      setStart(point, "gps");
-      setExpanded(false);
-    },
-  });
   const signature = JSON.stringify({ origin, destination, profile, language });
   const route = useMutation({
-    mutationFn: async () => ({
+    mutationFn: async (start: Location) => ({
       result: await realData.walking({
-        origin: origin!,
+        origin: start,
         destination: destination!,
         locationUseConsent: consent,
       }),
-      signature,
+      signature: JSON.stringify({
+        origin: start,
+        destination,
+        profile,
+        language,
+      }),
     }),
     onSuccess: () => setExpanded(true),
   });
@@ -105,12 +136,12 @@ export function NavigationPage() {
   const latestContext = useRef(recommendationSignature);
   latestContext.current = recommendationSignature;
   const compare = useMutation({
-    mutationFn: async () => ({
+    mutationFn: async (start: Location) => ({
       value: await realData.recommend({
-        origin: origin!,
+        origin: start,
         locationUseConsent: compareConsent,
       }),
-      signature: recommendationSignature,
+      signature: JSON.stringify({ origin: start, profile, language }),
     }),
     onSuccess: ({ value, signature: originalSignature }) => {
       if (originalSignature !== latestContext.current) return;
@@ -124,7 +155,6 @@ export function NavigationPage() {
         route: value.route,
         compared: value.comparedSites,
       });
-      setConsent(false);
       setExpanded(true);
     },
   });
@@ -135,11 +165,13 @@ export function NavigationPage() {
       ? recommended
       : undefined;
   const result =
-    route.data?.signature === signature
+    consent && route.data?.signature === signature
       ? route.data.result
-      : recommendedResult?.route;
+      : consent
+        ? recommendedResult?.route
+        : undefined;
   const localNotices =
-    !earthquake.error && earthquake.data?.status === "available"
+    usable && !earthquake.error && earthquake.data?.status === "available"
       ? earthquake.data.notices
       : [];
   const alert = localNotices.find((n) => n.code === 556) || localNotices[0];
@@ -151,13 +183,13 @@ export function NavigationPage() {
     >
       <div className="live-map-stage">
         <RoadPreviewMap
-          origin={origin}
+          origin={originSource === "gps" ? (consent ? fix : undefined) : origin}
           destination={destination}
           geometry={
             result?.geometry as { coordinates?: number[][] } | undefined
           }
           sites={
-            !shelters.error && shelters.data?.status === "available"
+            usable && !shelters.error && shelters.data?.status === "available"
               ? shelters.data.sites
               : EMPTY_SITES
           }
@@ -214,8 +246,12 @@ export function NavigationPage() {
                 {origin
                   ? originSource === "gps"
                     ? en
-                      ? "GPS location acquired"
-                      : "GPS現在地を取得済み"
+                      ? liveGPS
+                        ? "GPS auto-updating"
+                        : "Waiting for GPS"
+                      : liveGPS
+                        ? "GPS自動更新中"
+                        : "GPS受信待ち"
                     : en
                       ? "Manually selected start"
                       : "手動で指定した出発地"
@@ -225,7 +261,7 @@ export function NavigationPage() {
               </strong>
               <small>
                 {originTime
-                  ? `${originTime.toLocaleTimeString(language)} · ${en ? "Refresh when you move" : "移動したら再取得"}`
+                  ? `${originTime.toLocaleTimeString(language)} · ${en ? "Automatic GPS updates" : "GPS自動更新"}`
                   : en
                     ? "No default or fictional location"
                     : "架空の現在地は設定していません"}
@@ -233,16 +269,13 @@ export function NavigationPage() {
             </div>
             <IonButton
               size="small"
-              disabled={gps.isPending}
-              onClick={() => gps.mutate()}
+              onClick={() => {
+                setOriginSource("gps");
+                setOrigin(fix);
+                setExpanded(true);
+              }}
             >
-              {gps.isPending
-                ? en
-                  ? "Locating…"
-                  : "取得中…"
-                : en
-                  ? "Agree & locate"
-                  : "同意して現在地取得"}
+              {en ? "GPS settings" : "GPS・同意設定"}
             </IonButton>
           </div>
           {!expanded && (
@@ -270,13 +303,15 @@ export function NavigationPage() {
           )}
           {expanded && (
             <div className="map-sheet-content">
-              {origin && <EvacuationAdvisor origin={origin} en={en} />}
+              <LocationPreferences en={en} />
+              {areaOrigin && usable && (
+                <EvacuationAdvisor origin={areaOrigin} en={en} />
+              )}
               <p className="map-privacy">
                 {en
-                  ? "Location is read only when you tap Agree. It is sent to TASUKU/Google for map display and to GSI for area lookup. It is not shared with other users. P2PQuake receives no GPS. Routes require separate consent below."
-                  : "ボタンへの同意後に位置を取得します。TASUKU・Googleへ地図表示、国土地理院へ地域照会のため送信します。他の利用者への位置共有はしません。P2P地震情報へGPSは送りません。経路計算には下の別の同意が必要です。"}
+                  ? "GPS updates automatically after saved consent. P2PQuake receives no GPS. You can revoke processing consent here or in Profile."
+                  : "保存した同意に基づきGPSを自動更新します。P2P地震情報へGPSは送りません。この設定またはプロフィールで同意を撤回できます。"}
               </p>
-              <ErrorNotice error={gps.error} />
               <div
                 className="map-tabs"
                 role="tablist"
@@ -348,27 +383,20 @@ export function NavigationPage() {
                         : "経路を比較する前にプロフィールを登録"}
                     </IonButton>
                   )}
-                  <label className="navigation-consent">
-                    <input
-                      type="checkbox"
-                      checked={compareConsent}
-                      onChange={(event) =>
-                        setCompareConsent(event.target.checked)
-                      }
-                    />
-                    {en
-                      ? "I agree to send my start and up to three nearby public sites to Google to compare walking routes."
-                      : "現在地と近くの公開避難場所を最大3候補、Googleへ送信して徒歩経路を比較することに同意します。"}
-                  </label>
                   <IonButton
                     disabled={
+                      !usable ||
                       !origin ||
                       !profile ||
                       !compareConsent ||
                       compare.isPending ||
                       shelters.data?.status !== "available"
                     }
-                    onClick={() => compare.mutate()}
+                    onClick={() => {
+                      const start = originSource === "gps" ? fix! : origin!;
+                      setOrigin(start);
+                      compare.mutate(start);
+                    }}
                   >
                     {compare.isPending
                       ? en
@@ -380,7 +408,7 @@ export function NavigationPage() {
                   </IonButton>
                   <ErrorNotice error={compare.error} />
                   <div className="real-site-list">
-                    {shelters.data?.sites.map((site) => (
+                    {(usable ? shelters.data?.sites : [])?.map((site) => (
                       <button key={site.id} onClick={() => chooseSite(site.id)}>
                         <span className="site-symbol">避</span>
                         <span>
@@ -520,25 +548,20 @@ export function NavigationPage() {
                       {en ? "Set up profile" : "プロフィールを登録"}
                     </IonButton>
                   )}
-                  <label className="navigation-consent">
-                    <input
-                      type="checkbox"
-                      checked={consent}
-                      onChange={(e) => setConsent(e.target.checked)}
-                    />
-                    {en
-                      ? "I agree to send these two points to TASUKU and Google to calculate this route. They are not saved."
-                      : "今回の経路計算のため、この2地点をTASUKUとGoogleへ送信することに同意します。保存はしません。"}
-                  </label>
                   <IonButton
                     disabled={
+                      !usable ||
                       !origin ||
                       !destination ||
                       !consent ||
                       !profile ||
                       route.isPending
                     }
-                    onClick={() => route.mutate()}
+                    onClick={() => {
+                      const start = originSource === "gps" ? fix! : origin!;
+                      setOrigin(start);
+                      route.mutate(start);
+                    }}
                   >
                     {route.isPending
                       ? en
@@ -551,7 +574,7 @@ export function NavigationPage() {
                   <ErrorNotice error={route.error} />
                   {result && (
                     <div className="real-route-result">
-                      {active && destination && (
+                      {active && usable && destination && (
                         <TurnByTurnNavigator
                           route={result}
                           destination={destination}
@@ -641,6 +664,7 @@ export function NavigationPage() {
                 <IonButton
                   fill="outline"
                   disabled={
+                    !consent ||
                     manual.latitude === "" ||
                     manual.longitude === "" ||
                     !Number.isFinite(Number(manual.latitude)) ||

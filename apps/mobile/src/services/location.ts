@@ -40,7 +40,7 @@ export async function getCurrentLocation() {
   };
 }
 
-/** A watch belongs to one explicit foreground navigation session. */
+/** A watch belongs to the app-wide, consented foreground location session. */
 export async function watchLocation(
   onFix: (fix: import("../navigation/progress").Fix) => void,
   onError: (message: string) => void,

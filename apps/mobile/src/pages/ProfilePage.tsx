@@ -1,3 +1,4 @@
+import { LocationPreferences } from "../components/LocationPreferences";
 import { useEffect, useState } from "react";
 import {
   IonButton,
@@ -44,6 +45,7 @@ export function ProfilePage() {
       title={en ? "Your profile" : "プロフィール"}
       eyebrow="YOUR PREFERENCES"
     >
+      <LocationPreferences en={en} />
       <div className="form-card">
         <p className="notice">
           {en

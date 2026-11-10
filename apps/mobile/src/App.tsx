@@ -17,6 +17,8 @@ import { api } from "./services/api";
 import { useAppStore } from "./stores/useAppStore";
 import type { Profile } from "./types/domain";
 
+import { LocationSession } from "./components/LocationSession";
+
 setupIonicReact();
 export default function App() {
   const profile = useQuery({
@@ -31,6 +33,7 @@ export default function App() {
   }, [profile.data]);
   return (
     <IonApp>
+      <LocationSession />
       <IonReactRouter>
         <IonRouterOutlet>
           <Route exact path="/welcome" component={WelcomePage} />

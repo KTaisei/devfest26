@@ -1,3 +1,4 @@
+import { useLocationSession } from "../stores/useLocationSession";
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { IonButton } from "@ionic/react";
@@ -12,8 +13,8 @@ export function EvacuationAdvisor({
   origin: Location;
   en: boolean;
 }) {
-  const [consent, setConsent] = useState(false),
-    [shaking, setShaking] = useState(false),
+  const consent = useLocationSession((s) => s.consent.ai);
+  const [shaking, setShaking] = useState(false),
     [blocked, setBlocked] = useState(false);
   const signature = JSON.stringify({ origin, shaking, blocked });
   const advice = useMutation({
@@ -54,16 +55,11 @@ export function EvacuationAdvisor({
         />
         {en ? "Obstruction observed" : "通行障害を確認した"}
       </label>
-      <label className="navigation-consent">
-        <input
-          type="checkbox"
-          checked={consent}
-          onChange={(e) => setConsent(e.target.checked)}
-        />
+      <p>
         {en
-          ? "I agree to send these reported conditions, local notice availability/count, and assistance status to Gemini through TASUKU. No GPS coordinates or identity are sent to Gemini."
-          : "申告内容・地域の地震情報の取得状態と件数・自分の支援進行状態をTASUKU経由でGeminiへ送ることに同意します。GeminiへGPS座標・個人の識別情報は送りません。"}
-      </label>
+          ? "Gemini uses your saved consent in GPS settings / Profile."
+          : "Gemini利用はGPS・同意設定／プロフィールで保存した同意に基づきます。"}
+      </p>
       <IonButton
         disabled={!consent || advice.isPending}
         onClick={() => advice.mutate()}
@@ -77,7 +73,7 @@ export function EvacuationAdvisor({
             : "次に確認することを整理"}
       </IonButton>
       <ErrorNotice error={advice.error} />
-      {advice.data?.signature === signature && (
+      {consent && advice.data?.signature === signature && (
         <DecisionNotice value={advice.data.value} en={en} />
       )}
     </details>

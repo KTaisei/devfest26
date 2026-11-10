@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { IonButton, IonSelect, IonSelectOption } from "@ionic/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "react-router-dom";
@@ -6,11 +6,12 @@ import { TurnByTurnNavigator } from "../components/TurnByTurnNavigator";
 import { DecisionNotice } from "../components/DecisionNotice";
 import { Layout, ErrorNotice } from "../components/Layout";
 import { RoadPreviewMap } from "../components/RoadPreviewMap";
-import { getCurrentLocation } from "../services/location";
+import { useLocationSession } from "../stores/useLocationSession";
+import { LocationPreferences } from "../components/LocationPreferences";
 import { realData } from "../services/realData";
 import { useAppStore } from "../stores/useAppStore";
 import { supportLabel } from "./SupportPage";
-import type { Location, SupportType } from "../types/domain";
+import type { SupportType } from "../types/domain";
 import type { components } from "../types/api.generated";
 
 type Assistance = components["schemas"]["AssistanceOutput"];
@@ -28,21 +29,16 @@ export function AssistancePage({ helper = false }: { helper?: boolean }) {
   const { language, profile } = useAppStore(),
     en = language === "en";
   const client = useQueryClient();
-  const [point, setPoint] = useState<Location>();
-  const [acquiredAt, setAcquiredAt] = useState<number>(0);
-  const [consent, setConsent] = useState(false);
+  const { fix, consent: permissions } = useLocationSession();
+  const point = permissions.services ? fix : undefined;
+  const acquiredAt = point?.timestamp || 0;
+  const consent = permissions.services && permissions.assistance;
+  const aiConsent = permissions.ai;
   const [metConfirmed, setMetConfirmed] = useState(false);
   const [supportType, setSupportType] = useState<SupportType>("navigation");
-  const [aiConsent, setAiConsent] = useState(false);
   const [now, setNow] = useState(Date.now());
   const active = useLocation().pathname === (helper ? "/helper" : "/support");
   useEffect(() => {
-    if (!active) {
-      setPoint(undefined);
-      setConsent(false);
-      setAcquiredAt(0);
-      return;
-    }
     const id = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(id);
   }, [active]);
@@ -55,26 +51,59 @@ export function AssistancePage({ helper = false }: { helper?: boolean }) {
     gcTime: 0,
   });
   const current = mine.data?.[0];
-  const gps = useMutation({
-    mutationFn: getCurrentLocation,
-    onSuccess: async (value) => {
-      setPoint(value);
-      setAcquiredAt(Date.now());
-      setConsent(false);
-      if (current?.status === "waiting" && current.role === "requester") {
-        await realData.updatePosition(current.id, {
-          origin: value,
-          locationUseConsent: true,
-        });
-      }
-    },
-  });
   const ready = Boolean(
     point &&
     consent &&
-    now - acquiredAt < 300000 &&
+    now - acquiredAt < 10000 &&
     profile?.locationSharingEnabled,
   );
+  const latest = useRef({ point, ready, current, active });
+  latest.current = { point, ready, current, active };
+  const [positionError, setPositionError] = useState<unknown>();
+  useEffect(() => {
+    if (
+      !active ||
+      !consent ||
+      current?.role !== "requester" ||
+      current.status !== "waiting"
+    )
+      return;
+    let live = true,
+      busy = false;
+    const update = () => {
+      const value = latest.current;
+      if (
+        busy ||
+        !value.active ||
+        !value.ready ||
+        !value.point ||
+        document.hidden ||
+        value.current?.status !== "waiting"
+      )
+        return;
+      busy = true;
+      void realData
+        .updatePosition(value.current.id, {
+          origin: value.point,
+          locationUseConsent: true,
+        })
+        .then(() => {
+          if (live) setPositionError(undefined);
+        })
+        .catch((error) => {
+          if (live) setPositionError(error);
+        })
+        .finally(() => {
+          busy = false;
+        });
+    };
+    update();
+    const id = window.setInterval(update, 30000);
+    return () => {
+      live = false;
+      window.clearInterval(id);
+    };
+  }, [active, consent, current?.id, current?.role, current?.status]);
   async function refresh() {
     setMetConfirmed(false);
     await client.invalidateQueries({ queryKey: ["real-assistance"] });
@@ -92,7 +121,7 @@ export function AssistancePage({ helper = false }: { helper?: boolean }) {
     onSuccess: refresh,
   });
   const search = useQuery({
-    queryKey: ["nearby-real-assistance", point],
+    queryKey: ["nearby-real-assistance"],
     enabled:
       active &&
       helper &&
@@ -120,7 +149,6 @@ export function AssistancePage({ helper = false }: { helper?: boolean }) {
   const directions = useMutation({
     mutationFn: async () => ({
       id: current!.id,
-      point,
       route: await realData.directions(current!.id, {
         origin: point!,
         locationUseConsent: consent,
@@ -128,15 +156,23 @@ export function AssistancePage({ helper = false }: { helper?: boolean }) {
     }),
   });
   const ownRoute =
-    directions.data?.id === current?.id && directions.data?.point === point
+    consent && directions.data?.id === current?.id
       ? directions.data?.route
       : undefined;
   const progress = useMutation({
     mutationFn: async (action: "arrive" | "cancel" | "complete") => {
       // Arrival is a deliberate visual confirmation plus a fresh location reading,
       // not a claim that GPS alone proves that two people actually met.
-      const origin =
-        action === "arrive" ? await getCurrentLocation() : undefined;
+      const live = useLocationSession.getState();
+      if (
+        action === "arrive" &&
+        (!live.consent.services ||
+          !live.consent.assistance ||
+          !live.fix ||
+          Date.now() - live.fix.timestamp > 10000)
+      )
+        throw new Error("新しいGPSが必要です。 / Fresh GPS required.");
+      const origin = action === "arrive" ? live.fix : undefined;
       return realData.progress(current!.id, {
         action,
         origin,
@@ -176,53 +212,9 @@ export function AssistancePage({ helper = false }: { helper?: boolean }) {
           </IonButton>
         </p>
       )}
-      <section className="form-card">
-        <h2>{en ? "Your actual location" : "あなたの実際の現在地"}</h2>
-        <p>
-          {en
-            ? "Agree to read GPS and display it with Google. While your request is waiting, refreshing also updates its shared position. Requesting support stores your location privately in TASUKU for up to 30 minutes. No other user receives your GPS. With the consent below, Google computes approaches to a shared public meeting site."
-            : "同意してGPSを取得し、Googleの地図へ表示します。依頼が受付中の場合は共有位置も更新します。支援を依頼するとTASUKUが最大30分、位置を非公開で保持します。他の利用者にGPS座標は渡しません。下の同意後、Googleが双方から公開合流地点への経路を計算します。"}
-        </p>
-        <IonButton disabled={gps.isPending} onClick={() => gps.mutate()}>
-          {en ? "Agree & refresh GPS" : "同意してGPS現在地を取得・更新"}
-        </IonButton>
-        <ErrorNotice error={gps.error} />
-        <p role="status">
-          {point
-            ? `${en ? "GPS acquired" : "GPS取得済み"} · ${new Date(acquiredAt).toLocaleTimeString(language)}`
-            : en
-              ? "Current location not acquired. No simulation point is used."
-              : "現在地は未取得です。模擬地点は使用しません。"}
-        </p>
-        <label className="navigation-consent">
-          <input
-            type="checkbox"
-            checked={consent}
-            onChange={(e) => setConsent(e.target.checked)}
-          />
-          {en
-            ? "I agree to use this GPS position to find/match support and send both approaches to Google. The public site is not a verified entrance or safe site."
-            : "このGPS位置での支援検索・マッチングと、双方の合流経路をGoogleへ送信して計算することに同意します。公開地点の入口・安全性は未確認です。"}
-        </label>
-        {helper && !profile?.isAvailableToHelp && (
-          <p>
-            {en
-              ? "Turn on availability in your profile."
-              : "プロフィールの支援受付を有効にしてください。"}
-          </p>
-        )}
-        <label className="navigation-consent">
-          <input
-            type="checkbox"
-            checked={aiConsent}
-            onChange={(e) => setAiConsent(e.target.checked)}
-          />
-          {en
-            ? "Allow Gemini to compare verified public meeting candidates using anonymous aggregate walking times. No GPS or identity is sent. Both people must opt in; otherwise fixed rules select the point."
-            : "匿名化した合計・最長の徒歩所要時間だけをGeminiに送り、確認済みの公開合流候補を比較することに同意します。GPS・識別情報は送りません。双方の同意がない場合は固定ルールで選びます。"}
-        </label>
-      </section>
+      <LocationPreferences en={en} />
       <ErrorNotice error={mine.error} />
+      <ErrorNotice error={consent ? positionError : undefined} />
       {lastStatus && <p role="status">{lastStatus}</p>}
       {current ? (
         <section className="form-card">
@@ -273,7 +265,7 @@ export function AssistancePage({ helper = false }: { helper?: boolean }) {
               <ErrorNotice error={directions.error} />
               {ownRoute && (
                 <>
-                  {active && (
+                  {active && ready && (
                     <TurnByTurnNavigator
                       route={ownRoute}
                       destination={current.meetingPoint}
@@ -321,11 +313,11 @@ export function AssistancePage({ helper = false }: { helper?: boolean }) {
                       onChange={(e) => setMetConfirmed(e.target.checked)}
                     />
                     {en
-                      ? "I have met the other person at this site. I agree to read fresh GPS for the confirmation."
-                      : "この地点で実際に相手と会えたことを確認しました。確認のため再度GPSを取得することに同意します。"}
+                      ? "I have met the other person at this site. The confirmation uses fresh automatically updated GPS."
+                      : "この地点で実際に相手と会えたことを確認しました。確認には自動更新した新しいGPSを使用します。"}
                   </label>
                   <IonButton
-                    disabled={!metConfirmed || progress.isPending}
+                    disabled={!metConfirmed || !ready || progress.isPending}
                     onClick={() => progress.mutate("arrive")}
                   >
                     {en ? "Confirm meeting" : "合流を確認"}
